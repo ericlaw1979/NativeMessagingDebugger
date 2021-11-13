@@ -1,0 +1,1 @@
+This will be a simple debugger for Chromium's NativeMessaging JSON messages.

@@ -1,0 +1,144 @@
+﻿using Microsoft.Win32;
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Text;
+
+namespace nmf_view
+{
+    class RegisteredHosts
+    {
+        internal struct HostEntry
+        {
+            /// <summary>
+            /// For example, com.bayden.moarTLS
+            /// </summary>
+            public string Name;
+            public string ManifestFilename;
+            public string Command;
+            public string OriginalCommand;
+            public string Description;
+            public string SupportedBrowsers;
+            public string AllowedExtensions;
+            public int iPriority;
+            public string RegistryKeyPath;
+
+            public override string ToString()
+            {
+                return "--------------------------------\n" +
+                       $"Name:\t\t{Name}\n" +
+                       $"Priority:\t{iPriority}\n" +
+                       $"Manifest:\t{ManifestFilename}\n" +
+                       $"Command:\t{OriginalCommand}\n" +
+                       $"Description:\t{Description}\n" +
+                       $"Browsers:\t{SupportedBrowsers}\n" +
+                       $"Extensions:\t{AllowedExtensions}\n" +
+                       $"RegKey:\t\t{RegistryKeyPath}\n" +
+                       "--------------------------------\n";
+            }
+        };
+
+        private static readonly RegistryHive[] hives = { RegistryHive.CurrentUser, RegistryHive.LocalMachine };
+        private static readonly string[] keysPriorityOrder = {
+                @"SOFTWARE\WOW6432Node\Microsoft\Edge\NativeMessagingHosts\",
+                @"SOFTWARE\WOW6432Node\Chromium\NativeMessagingHosts\",
+                @"SOFTWARE\WOW6432Node\Google\Chrome\NativeMessagingHosts\",
+                @"SOFTWARE\Microsoft\Edge\NativeMessagingHosts\",
+                @"SOFTWARE\Chromium\NativeMessagingHosts\",
+                @"SOFTWARE\Google\Chrome\NativeMessagingHosts\"};
+
+        /* https://docs.microsoft.com/en-us/microsoft-edge/extensions-chromium/developer-guide/native-messaging?tabs=windows
+    HKEY_CURRENT_USER\
+    HKEY_LOCAL_MACHINE */
+
+        private static void ReadRegistry(List<HostEntry> listResults) {
+            int iCurrentPriority = 0;
+            foreach (RegistryHive rhHive in hives)
+            {
+                RegistryKey rkBase = RegistryKey.OpenBaseKey(rhHive, RegistryView.Registry64);
+                foreach (string sKey in keysPriorityOrder)
+                {
+                    ++iCurrentPriority;
+                    // Explicit permissions improves performance.
+                    RegistryKey oReg = rkBase.OpenSubKey(sKey,
+                        RegistryKeyPermissionCheck.ReadSubTree,
+                        System.Security.AccessControl.RegistryRights.ReadKey);
+
+                    if (null == oReg) continue;
+
+                    string[] arrEntries = oReg.GetSubKeyNames();
+                    foreach (string sHost in arrEntries)
+                    {
+                        RegistryKey rkEntry = oReg.OpenSubKey(sHost,
+                                RegistryKeyPermissionCheck.ReadSubTree,
+                                System.Security.AccessControl.RegistryRights.ReadKey);
+
+                        var oHE = new HostEntry()
+                        {
+                            Name = sHost,
+                            ManifestFilename = rkEntry.GetValue(String.Empty) as string,
+                            iPriority = iCurrentPriority,
+                            RegistryKeyPath = rkEntry.ToString()
+                        };
+                        switch (iCurrentPriority)
+                        {
+                            case 1:
+                            case 4:
+                            case 7:
+                            case 10:
+                                oHE.SupportedBrowsers = "Edge";
+                                break;
+                        }
+                        FillHostEntry(ref oHE);
+                        listResults.Add(oHE);
+                    }
+                    oReg.Close();
+                }
+                rkBase.Close();
+            }
+        }
+
+        private static void FillHostEntry(ref HostEntry oHE)
+        {
+            try
+            {
+                if (String.IsNullOrEmpty(oHE.ManifestFilename)) return;
+                if (!File.Exists(oHE.ManifestFilename)) return;
+                string sJSON = File.ReadAllText(oHE.ManifestFilename, Encoding.UTF8);
+                JSON.JSONParseErrors oErrors;
+                Hashtable htManifest = JSON.JsonDecode(sJSON, out oErrors) as Hashtable;
+                if (htManifest == null)
+                {
+                    oHE.Description = $"Error at offset {oErrors.iErrorIndex} {oErrors.sWarningText}";
+                    oHE.Command = "???";
+                    oHE.AllowedExtensions = "???";
+                    return;
+                }
+                // assert oHE.Name == htManifest["name"] as string;
+                oHE.Description = htManifest["description"] as string;
+                oHE.Command = htManifest["path"] as string;
+                oHE.OriginalCommand = oHE.Command;  // TODO: Fix this.
+
+                ArrayList alAllowedOrigins = htManifest["allowed_origins"] as ArrayList;
+                if (alAllowedOrigins != null)
+                {
+                    oHE.AllowedExtensions = string.Join(";", alAllowedOrigins.ToArray().Select(s => (s as String).Trim().TrimEnd('/').Replace("chrome-extension://", String.Empty)));
+                }
+
+            }
+            catch
+            {
+                // TODO: Log useful errors
+            }
+        }
+
+        internal static List<HostEntry> GetAllHosts()
+        {
+            List<HostEntry> listResults = new List<HostEntry>();
+            ReadRegistry(listResults);
+            return listResults;
+        }
+    }
+}
