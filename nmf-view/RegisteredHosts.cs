@@ -40,6 +40,7 @@ namespace nmf_view
             }
         };
 
+        // HKCU is prioritized over HKLM.
         private static readonly RegistryHive[] hives = { RegistryHive.CurrentUser, RegistryHive.LocalMachine };
         private static readonly string[] keysPriorityOrder = {
                 @"SOFTWARE\WOW6432Node\Microsoft\Edge\NativeMessagingHosts\",
@@ -49,14 +50,13 @@ namespace nmf_view
                 @"SOFTWARE\Chromium\NativeMessagingHosts\",
                 @"SOFTWARE\Google\Chrome\NativeMessagingHosts\"};
 
-        /* https://docs.microsoft.com/en-us/microsoft-edge/extensions-chromium/developer-guide/native-messaging?tabs=windows
-    HKEY_CURRENT_USER\
-    HKEY_LOCAL_MACHINE */
+        // https://docs.microsoft.com/en-us/microsoft-edge/extensions-chromium/developer-guide/native-messaging?tabs=windows
 
         private static void ReadRegistry(List<HostEntry> listResults) {
             int iCurrentPriority = 0;
             foreach (RegistryHive rhHive in hives)
             {
+                // TODO: This doesn't seem to be quite right. Are we getting everything??          Should we have the wow32 nodes above or should we just change the registry view??
                 RegistryKey rkBase = RegistryKey.OpenBaseKey(rhHive, RegistryView.Registry64);
                 foreach (string sKey in keysPriorityOrder)
                 {
@@ -84,6 +84,12 @@ namespace nmf_view
                         };
                         switch (iCurrentPriority)
                         {
+                            case 2:
+                            case 5:
+                            case 8:
+                            case 11:
+                                oHE.SupportedBrowsers = "Chromium; Edge";
+                                break;
                             case 1:
                             case 4:
                             case 7:
@@ -104,14 +110,24 @@ namespace nmf_view
         {
             try
             {
-                if (String.IsNullOrEmpty(oHE.ManifestFilename)) return;
-                if (!File.Exists(oHE.ManifestFilename)) return;
+                if (String.IsNullOrEmpty(oHE.ManifestFilename))
+                {
+                    oHE.Description = "ERROR: No manifest PATH specified in registry.";
+                    return;
+                }
+                if (!File.Exists(oHE.ManifestFilename)) 
+                {
+                    oHE.Description = "ERROR: Specified manifest PATH does not exist.";
+                    return;
+                }
+
+                // TODO: Check Manifest filename for special characters that cause problems.
+
                 string sJSON = File.ReadAllText(oHE.ManifestFilename, Encoding.UTF8);
                 JSON.JSONParseErrors oErrors;
-                Hashtable htManifest = JSON.JsonDecode(sJSON, out oErrors) as Hashtable;
-                if (htManifest == null)
+                if (!(JSON.JsonDecode(sJSON, out oErrors) is Hashtable htManifest))
                 {
-                    oHE.Description = $"Error at offset {oErrors.iErrorIndex} {oErrors.sWarningText}";
+                    oHE.Description = $"ERROR: Manifest Parsing failed at offset {oErrors.iErrorIndex} {oErrors.sWarningText}.";
                     oHE.Command = "???";
                     oHE.AllowedExtensions = "???";
                     return;
@@ -119,6 +135,9 @@ namespace nmf_view
                 // assert oHE.Name == htManifest["name"] as string;
                 oHE.Description = htManifest["description"] as string;
                 oHE.Command = htManifest["path"] as string;
+
+                // TODO: Check PATH (after full-qualification) filename for special characters that cause problems.
+
                 oHE.OriginalCommand = oHE.Command;  // TODO: Fix this.
 
                 ArrayList alAllowedOrigins = htManifest["allowed_origins"] as ArrayList;
@@ -128,9 +147,9 @@ namespace nmf_view
                 }
 
             }
-            catch
+            catch (Exception eX)
             {
-                // TODO: Log useful errors
+                oHE.Description = $"ERROR: {eX.Message}.";
             }
         }
 

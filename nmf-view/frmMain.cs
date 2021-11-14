@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
-using System.Linq;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
@@ -163,7 +162,7 @@ namespace nmf_view
 
         private void frmMain_Load(object sender, EventArgs e)
         {
-            lblVersion.Text = $"v{Application.ProductVersion}";
+            lblVersion.Text = $"v{Application.ProductVersion} [{((8 == IntPtr.Size) ? "64" : "32")}-bit]";
             this.Text += $" [pid:{Process.GetCurrentProcess().Id}{(Utilities.IsUserAnAdmin()?" Elevated":String.Empty)}]";
             //https://source.chromium.org/chromium/chromium/src/+/main:chrome/test/data/native_messaging/native_hosts/echo.py;l=30?q=parent-window&sq=&ss=chromium
             // string sArgs = string.Join(" ", Environment.GetCommandLineArgs().Skip(1).ToArray());
@@ -174,10 +173,11 @@ namespace nmf_view
                 oSettings.sExtensionID = "unknown";
                 log("Started without an extension ID.\r\n\r\n"
                   + "Note: This application does not seem to have been started by a Chromium-based browser\r\n"
-                  + "to handle NativeMessaging requests. Use the CONFIG tab below to reconfigure a\r\n"
+                  + "to respond to NativeMessaging requests. Use the CONFIG tab below to reconfigure a\r\n"
                   + "registered NativeMessaging Host to proxy its traffic through an instance of this app.\r\n"
                   + "\r\n---------------------------------\r\n"
                   );
+                tcApp.SelectedTab = pageAbout;
             }
 
             oSettings.sExtensionID = oSettings.sExtensionID.Replace("chrome-extension://", String.Empty);
@@ -187,7 +187,6 @@ namespace nmf_view
 
             clbOptions.SetItemChecked(2, true);
             clbOptions.SetItemChecked(3, true);
-            tcApp.SelectedTab = pageAbout;
 
             WaitForMessages();
         }
@@ -283,7 +282,7 @@ namespace nmf_view
                     item.SubItems.Add(oHE.AllowedExtensions);
 
                     // If the Host is registered system-wide, it's only editable if this app is run at Admin.
-                    bool bSystemRegistration = (oHE.iPriority <= 6);
+                    bool bSystemRegistration = (oHE.iPriority > 6);
                     item.Group = lvHosts.Groups[bSystemRegistration ? 1 : 0];
                     if (bSystemRegistration && !Utilities.IsUserAnAdmin()) item.BackColor = Color.FromArgb(0xE0, 0xE0, 0xE0);
                 }
@@ -327,6 +326,16 @@ namespace nmf_view
                 e.SuppressKeyPress = true;
                 (sender as HostListView).SelectAll();
                 return;
+            }
+        }
+
+        private void lvHosts_MouseDoubleClick(object sender, MouseEventArgs e)
+        {
+            if ((Control.ModifierKeys == Keys.Alt) && (lvHosts.SelectedItems.Count==1))
+            {
+                ListViewItem oLVI = lvHosts.SelectedItems[0];
+                RegisteredHosts.HostEntry oHE = (RegisteredHosts.HostEntry)oLVI.Tag;
+                Utilities.OpenRegeditTo(oHE.RegistryKeyPath);
             }
         }
     }

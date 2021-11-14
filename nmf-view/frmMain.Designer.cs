@@ -30,13 +30,12 @@ namespace nmf_view
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
+            System.Windows.Forms.ColumnHeader chManifest;
             System.Windows.Forms.ListViewGroup listViewGroup3 = new System.Windows.Forms.ListViewGroup("User-Registered (HKCU)", System.Windows.Forms.HorizontalAlignment.Left);
             System.Windows.Forms.ListViewGroup listViewGroup4 = new System.Windows.Forms.ListViewGroup("System-Registered (HKLM)", System.Windows.Forms.HorizontalAlignment.Left);
-            System.Windows.Forms.ColumnHeader chManifest;
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(frmMain));
             this.tcApp = new System.Windows.Forms.TabControl();
             this.pageMonitor = new System.Windows.Forms.TabPage();
-            this.txtLog = new System.Windows.Forms.TextBox();
             this.pnlTop = new System.Windows.Forms.Panel();
             this.clbOptions = new System.Windows.Forms.CheckedListBox();
             this.pbApp = new System.Windows.Forms.PictureBox();
@@ -47,7 +46,11 @@ namespace nmf_view
             this.chName = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.colPriority = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.chExe = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.chDescription = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.chBrowsers = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.chExtensions = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.pnlConfigureControls = new System.Windows.Forms.Panel();
+            this.label2 = new System.Windows.Forms.Label();
             this.pageAbout = new System.Windows.Forms.TabPage();
             this.lblQuickStart = new System.Windows.Forms.Label();
             this.lnkEric = new System.Windows.Forms.LinkLabel();
@@ -56,10 +59,7 @@ namespace nmf_view
             this.label1 = new System.Windows.Forms.Label();
             this.lnkGithub = new System.Windows.Forms.LinkLabel();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
-            this.chDescription = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.label2 = new System.Windows.Forms.Label();
-            this.chBrowsers = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.chExtensions = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.txtLog = new System.Windows.Forms.RichTextBox();
             chManifest = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.tcApp.SuspendLayout();
             this.pageMonitor.SuspendLayout();
@@ -70,6 +70,11 @@ namespace nmf_view
             this.pnlConfigureControls.SuspendLayout();
             this.pageAbout.SuspendLayout();
             this.SuspendLayout();
+            // 
+            // chManifest
+            // 
+            chManifest.Text = "App";
+            chManifest.Width = 120;
             // 
             // tcApp
             // 
@@ -99,22 +104,6 @@ namespace nmf_view
             this.pageMonitor.TabIndex = 0;
             this.pageMonitor.Text = "Monitor";
             this.pageMonitor.UseVisualStyleBackColor = true;
-            // 
-            // txtLog
-            // 
-            this.txtLog.BackColor = System.Drawing.SystemColors.WindowText;
-            this.txtLog.BorderStyle = System.Windows.Forms.BorderStyle.None;
-            this.txtLog.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.txtLog.Font = new System.Drawing.Font("Consolas", 9.857143F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.txtLog.ForeColor = System.Drawing.SystemColors.HighlightText;
-            this.txtLog.Location = new System.Drawing.Point(3, 178);
-            this.txtLog.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
-            this.txtLog.Multiline = true;
-            this.txtLog.Name = "txtLog";
-            this.txtLog.ReadOnly = true;
-            this.txtLog.Size = new System.Drawing.Size(1465, 641);
-            this.txtLog.TabIndex = 3;
-            this.txtLog.WordWrap = false;
             // 
             // pnlTop
             // 
@@ -196,7 +185,7 @@ namespace nmf_view
             this.pageRegisteredHosts.Padding = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.pageRegisteredHosts.Size = new System.Drawing.Size(1471, 823);
             this.pageRegisteredHosts.TabIndex = 1;
-            this.pageRegisteredHosts.Text = "NMHosts";
+            this.pageRegisteredHosts.Text = "Configure Hosts";
             this.pageRegisteredHosts.UseVisualStyleBackColor = true;
             // 
             // lvHosts
@@ -230,6 +219,7 @@ namespace nmf_view
             this.lvHosts.View = System.Windows.Forms.View.Details;
             this.lvHosts.ItemCheck += new System.Windows.Forms.ItemCheckEventHandler(this.lvHosts_ItemCheck);
             this.lvHosts.KeyDown += new System.Windows.Forms.KeyEventHandler(this.lvHosts_KeyDown);
+            this.lvHosts.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.lvHosts_MouseDoubleClick);
             // 
             // chName
             // 
@@ -240,16 +230,25 @@ namespace nmf_view
             // 
             this.colPriority.Text = "Priority";
             // 
-            // chManifest
-            // 
-            chManifest.Text = "App";
-            chManifest.Width = 120;
-            // 
             // chExe
             // 
             this.chExe.Text = "Exe";
             this.chExe.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
             this.chExe.Width = 200;
+            // 
+            // chDescription
+            // 
+            this.chDescription.Text = "Description";
+            this.chDescription.Width = 120;
+            // 
+            // chBrowsers
+            // 
+            this.chBrowsers.Text = "Browsers";
+            this.chBrowsers.Width = 100;
+            // 
+            // chExtensions
+            // 
+            this.chExtensions.Text = "Extensions";
             // 
             // pnlConfigureControls
             // 
@@ -259,6 +258,15 @@ namespace nmf_view
             this.pnlConfigureControls.Name = "pnlConfigureControls";
             this.pnlConfigureControls.Size = new System.Drawing.Size(1465, 100);
             this.pnlConfigureControls.TabIndex = 1;
+            // 
+            // label2
+            // 
+            this.label2.AutoSize = true;
+            this.label2.Location = new System.Drawing.Point(5, 32);
+            this.label2.Name = "label2";
+            this.label2.Size = new System.Drawing.Size(713, 30);
+            this.label2.TabIndex = 0;
+            this.label2.Text = "Select which NativeMessagingHosts this application should intercept/proxy.";
             // 
             // pageAbout
             // 
@@ -351,28 +359,20 @@ namespace nmf_view
             this.lnkGithub.UseCompatibleTextRendering = true;
             this.lnkGithub.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.lnkGithub_LinkClicked);
             // 
-            // chDescription
+            // txtLog
             // 
-            this.chDescription.Text = "Description";
-            this.chDescription.Width = 120;
-            // 
-            // label2
-            // 
-            this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(5, 32);
-            this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(713, 30);
-            this.label2.TabIndex = 0;
-            this.label2.Text = "Select which NativeMessagingHosts this application should intercept/proxy.";
-            // 
-            // chBrowsers
-            // 
-            this.chBrowsers.Text = "Browsers";
-            this.chBrowsers.Width = 100;
-            // 
-            // chExtensions
-            // 
-            this.chExtensions.Text = "Extensions";
+            this.txtLog.BackColor = System.Drawing.SystemColors.WindowText;
+            this.txtLog.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            this.txtLog.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.txtLog.Font = new System.Drawing.Font("Consolas", 9.857143F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.txtLog.ForeColor = System.Drawing.SystemColors.Window;
+            this.txtLog.Location = new System.Drawing.Point(3, 178);
+            this.txtLog.Name = "txtLog";
+            this.txtLog.ReadOnly = true;
+            this.txtLog.Size = new System.Drawing.Size(1465, 641);
+            this.txtLog.TabIndex = 3;
+            this.txtLog.Text = "";
+            this.txtLog.WordWrap = false;
             // 
             // frmMain
             // 
@@ -389,7 +389,6 @@ namespace nmf_view
             this.Load += new System.EventHandler(this.frmMain_Load);
             this.tcApp.ResumeLayout(false);
             this.pageMonitor.ResumeLayout(false);
-            this.pageMonitor.PerformLayout();
             this.pnlTop.ResumeLayout(false);
             this.pnlTop.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pbApp)).EndInit();
@@ -413,7 +412,6 @@ namespace nmf_view
         private System.Windows.Forms.PictureBox pbExt;
         private System.Windows.Forms.ToolTip toolTip1;
         private System.Windows.Forms.Label lblArrow;
-        private System.Windows.Forms.TextBox txtLog;
         private System.Windows.Forms.TabPage pageRegisteredHosts;
         private System.Windows.Forms.TabPage pageAbout;
         private System.Windows.Forms.LinkLabel lnkGithub;
@@ -431,5 +429,6 @@ namespace nmf_view
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.ColumnHeader chBrowsers;
         private System.Windows.Forms.ColumnHeader chExtensions;
+        private System.Windows.Forms.RichTextBox txtLog;
     }
 }
