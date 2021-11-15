@@ -30,25 +30,17 @@ namespace nmf_view
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            System.Windows.Forms.ColumnHeader chManifest;
-            System.Windows.Forms.ListViewGroup listViewGroup3 = new System.Windows.Forms.ListViewGroup("User-Registered (HKCU)", System.Windows.Forms.HorizontalAlignment.Left);
-            System.Windows.Forms.ListViewGroup listViewGroup4 = new System.Windows.Forms.ListViewGroup("System-Registered (HKLM)", System.Windows.Forms.HorizontalAlignment.Left);
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(frmMain));
+            System.Windows.Forms.ListViewGroup listViewGroup1 = new System.Windows.Forms.ListViewGroup("User-Registered (HKCU)", System.Windows.Forms.HorizontalAlignment.Left);
+            System.Windows.Forms.ListViewGroup listViewGroup2 = new System.Windows.Forms.ListViewGroup("System-Registered (HKLM)", System.Windows.Forms.HorizontalAlignment.Left);
+            System.Windows.Forms.ColumnHeader chManifest;
             this.tcApp = new System.Windows.Forms.TabControl();
             this.pageMonitor = new System.Windows.Forms.TabPage();
+            this.txtLog = new System.Windows.Forms.RichTextBox();
             this.pnlTop = new System.Windows.Forms.Panel();
             this.clbOptions = new System.Windows.Forms.CheckedListBox();
-            this.pbApp = new System.Windows.Forms.PictureBox();
-            this.pbExt = new System.Windows.Forms.PictureBox();
             this.lblArrow = new System.Windows.Forms.Label();
             this.pageRegisteredHosts = new System.Windows.Forms.TabPage();
-            this.lvHosts = new nmf_view.HostListView();
-            this.chName = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.colPriority = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.chExe = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.chDescription = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.chBrowsers = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.chExtensions = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.pnlConfigureControls = new System.Windows.Forms.Panel();
             this.label2 = new System.Windows.Forms.Label();
             this.pageAbout = new System.Windows.Forms.TabPage();
@@ -59,22 +51,25 @@ namespace nmf_view
             this.label1 = new System.Windows.Forms.Label();
             this.lnkGithub = new System.Windows.Forms.LinkLabel();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
-            this.txtLog = new System.Windows.Forms.RichTextBox();
+            this.lvHosts = new nmf_view.HostListView();
+            this.chName = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.colPriority = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.chExe = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.chDescription = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.chBrowsers = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.chExtensions = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.pbApp = new System.Windows.Forms.PictureBox();
+            this.pbExt = new System.Windows.Forms.PictureBox();
             chManifest = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.tcApp.SuspendLayout();
             this.pageMonitor.SuspendLayout();
             this.pnlTop.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.pbApp)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.pbExt)).BeginInit();
             this.pageRegisteredHosts.SuspendLayout();
             this.pnlConfigureControls.SuspendLayout();
             this.pageAbout.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.pbApp)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.pbExt)).BeginInit();
             this.SuspendLayout();
-            // 
-            // chManifest
-            // 
-            chManifest.Text = "App";
-            chManifest.Width = 120;
             // 
             // tcApp
             // 
@@ -104,6 +99,21 @@ namespace nmf_view
             this.pageMonitor.TabIndex = 0;
             this.pageMonitor.Text = "Monitor";
             this.pageMonitor.UseVisualStyleBackColor = true;
+            // 
+            // txtLog
+            // 
+            this.txtLog.BackColor = System.Drawing.SystemColors.WindowText;
+            this.txtLog.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            this.txtLog.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.txtLog.Font = new System.Drawing.Font("Consolas", 9.857143F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.txtLog.ForeColor = System.Drawing.SystemColors.Window;
+            this.txtLog.Location = new System.Drawing.Point(3, 178);
+            this.txtLog.Name = "txtLog";
+            this.txtLog.ReadOnly = true;
+            this.txtLog.Size = new System.Drawing.Size(1465, 641);
+            this.txtLog.TabIndex = 3;
+            this.txtLog.Text = "";
+            this.txtLog.WordWrap = false;
             // 
             // pnlTop
             // 
@@ -137,32 +147,6 @@ namespace nmf_view
             this.clbOptions.TabIndex = 1;
             this.clbOptions.ItemCheck += new System.Windows.Forms.ItemCheckEventHandler(this.clbOptions_ItemCheck);
             // 
-            // pbApp
-            // 
-            this.pbApp.Image = global::nmf_view.Properties.Resources.app;
-            this.pbApp.Location = new System.Drawing.Point(711, -4);
-            this.pbApp.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
-            this.pbApp.Name = "pbApp";
-            this.pbApp.Size = new System.Drawing.Size(193, 168);
-            this.pbApp.SizeMode = System.Windows.Forms.PictureBoxSizeMode.CenterImage;
-            this.pbApp.TabIndex = 2;
-            this.pbApp.TabStop = false;
-            this.pbApp.Click += new System.EventHandler(this.pbApp_Click);
-            this.pbApp.DoubleClick += new System.EventHandler(this.pbApp_DoubleClick);
-            // 
-            // pbExt
-            // 
-            this.pbExt.Image = global::nmf_view.Properties.Resources.ext;
-            this.pbExt.Location = new System.Drawing.Point(0, 0);
-            this.pbExt.Margin = new System.Windows.Forms.Padding(0);
-            this.pbExt.Name = "pbExt";
-            this.pbExt.Size = new System.Drawing.Size(193, 168);
-            this.pbExt.SizeMode = System.Windows.Forms.PictureBoxSizeMode.CenterImage;
-            this.pbExt.TabIndex = 3;
-            this.pbExt.TabStop = false;
-            this.toolTip1.SetToolTip(this.pbExt, "Calling extension is unknown");
-            this.pbExt.DoubleClick += new System.EventHandler(this.pbExt_DoubleClick);
-            // 
             // lblArrow
             // 
             this.lblArrow.AutoSize = true;
@@ -187,68 +171,6 @@ namespace nmf_view
             this.pageRegisteredHosts.TabIndex = 1;
             this.pageRegisteredHosts.Text = "Configure Hosts";
             this.pageRegisteredHosts.UseVisualStyleBackColor = true;
-            // 
-            // lvHosts
-            // 
-            this.lvHosts.CheckBoxes = true;
-            this.lvHosts.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
-            this.chName,
-            this.colPriority,
-            chManifest,
-            this.chExe,
-            this.chDescription,
-            this.chBrowsers,
-            this.chExtensions});
-            this.lvHosts.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.lvHosts.FullRowSelect = true;
-            this.lvHosts.GridLines = true;
-            listViewGroup3.Header = "User-Registered (HKCU)";
-            listViewGroup3.Name = "lvgHKCU";
-            listViewGroup4.Header = "System-Registered (HKLM)";
-            listViewGroup4.Name = "lvgHKLM";
-            this.lvHosts.Groups.AddRange(new System.Windows.Forms.ListViewGroup[] {
-            listViewGroup3,
-            listViewGroup4});
-            this.lvHosts.HideSelection = false;
-            this.lvHosts.Location = new System.Drawing.Point(3, 104);
-            this.lvHosts.Name = "lvHosts";
-            this.lvHosts.ShowItemToolTips = true;
-            this.lvHosts.Size = new System.Drawing.Size(1465, 715);
-            this.lvHosts.TabIndex = 0;
-            this.lvHosts.UseCompatibleStateImageBehavior = false;
-            this.lvHosts.View = System.Windows.Forms.View.Details;
-            this.lvHosts.ItemCheck += new System.Windows.Forms.ItemCheckEventHandler(this.lvHosts_ItemCheck);
-            this.lvHosts.KeyDown += new System.Windows.Forms.KeyEventHandler(this.lvHosts_KeyDown);
-            this.lvHosts.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.lvHosts_MouseDoubleClick);
-            // 
-            // chName
-            // 
-            this.chName.Text = "Name";
-            this.chName.Width = 430;
-            // 
-            // colPriority
-            // 
-            this.colPriority.Text = "Priority";
-            // 
-            // chExe
-            // 
-            this.chExe.Text = "Exe";
-            this.chExe.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
-            this.chExe.Width = 200;
-            // 
-            // chDescription
-            // 
-            this.chDescription.Text = "Description";
-            this.chDescription.Width = 120;
-            // 
-            // chBrowsers
-            // 
-            this.chBrowsers.Text = "Browsers";
-            this.chBrowsers.Width = 100;
-            // 
-            // chExtensions
-            // 
-            this.chExtensions.Text = "Extensions";
             // 
             // pnlConfigureControls
             // 
@@ -359,20 +281,98 @@ namespace nmf_view
             this.lnkGithub.UseCompatibleTextRendering = true;
             this.lnkGithub.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.lnkGithub_LinkClicked);
             // 
-            // txtLog
+            // lvHosts
             // 
-            this.txtLog.BackColor = System.Drawing.SystemColors.WindowText;
-            this.txtLog.BorderStyle = System.Windows.Forms.BorderStyle.None;
-            this.txtLog.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.txtLog.Font = new System.Drawing.Font("Consolas", 9.857143F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.txtLog.ForeColor = System.Drawing.SystemColors.Window;
-            this.txtLog.Location = new System.Drawing.Point(3, 178);
-            this.txtLog.Name = "txtLog";
-            this.txtLog.ReadOnly = true;
-            this.txtLog.Size = new System.Drawing.Size(1465, 641);
-            this.txtLog.TabIndex = 3;
-            this.txtLog.Text = "";
-            this.txtLog.WordWrap = false;
+            this.lvHosts.CheckBoxes = true;
+            this.lvHosts.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
+            this.chName,
+            this.colPriority,
+            chManifest,
+            this.chExe,
+            this.chDescription,
+            this.chBrowsers,
+            this.chExtensions});
+            this.lvHosts.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.lvHosts.FullRowSelect = true;
+            this.lvHosts.GridLines = true;
+            listViewGroup1.Header = "User-Registered (HKCU)";
+            listViewGroup1.Name = "lvgHKCU";
+            listViewGroup2.Header = "System-Registered (HKLM)";
+            listViewGroup2.Name = "lvgHKLM";
+            this.lvHosts.Groups.AddRange(new System.Windows.Forms.ListViewGroup[] {
+            listViewGroup1,
+            listViewGroup2});
+            this.lvHosts.HideSelection = false;
+            this.lvHosts.Location = new System.Drawing.Point(3, 104);
+            this.lvHosts.Name = "lvHosts";
+            this.lvHosts.ShowItemToolTips = true;
+            this.lvHosts.Size = new System.Drawing.Size(1465, 721);
+            this.lvHosts.TabIndex = 0;
+            this.lvHosts.UseCompatibleStateImageBehavior = false;
+            this.lvHosts.View = System.Windows.Forms.View.Details;
+            this.lvHosts.ItemCheck += new System.Windows.Forms.ItemCheckEventHandler(this.lvHosts_ItemCheck);
+            this.lvHosts.KeyDown += new System.Windows.Forms.KeyEventHandler(this.lvHosts_KeyDown);
+            this.lvHosts.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.lvHosts_MouseDoubleClick);
+            // 
+            // chName
+            // 
+            this.chName.Text = "Name";
+            this.chName.Width = 430;
+            // 
+            // colPriority
+            // 
+            this.colPriority.Text = "Priority";
+            // 
+            // chManifest
+            // 
+            chManifest.Text = "App";
+            chManifest.Width = 120;
+            // 
+            // chExe
+            // 
+            this.chExe.Text = "Exe";
+            this.chExe.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
+            this.chExe.Width = 200;
+            // 
+            // chDescription
+            // 
+            this.chDescription.Text = "Description";
+            this.chDescription.Width = 120;
+            // 
+            // chBrowsers
+            // 
+            this.chBrowsers.Text = "Browsers";
+            this.chBrowsers.Width = 100;
+            // 
+            // chExtensions
+            // 
+            this.chExtensions.Text = "Extensions";
+            // 
+            // pbApp
+            // 
+            this.pbApp.Image = global::nmf_view.Properties.Resources.app;
+            this.pbApp.Location = new System.Drawing.Point(711, -4);
+            this.pbApp.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            this.pbApp.Name = "pbApp";
+            this.pbApp.Size = new System.Drawing.Size(193, 168);
+            this.pbApp.SizeMode = System.Windows.Forms.PictureBoxSizeMode.CenterImage;
+            this.pbApp.TabIndex = 2;
+            this.pbApp.TabStop = false;
+            this.pbApp.Click += new System.EventHandler(this.pbApp_Click);
+            this.pbApp.DoubleClick += new System.EventHandler(this.pbApp_DoubleClick);
+            // 
+            // pbExt
+            // 
+            this.pbExt.Image = global::nmf_view.Properties.Resources.ext;
+            this.pbExt.Location = new System.Drawing.Point(0, 0);
+            this.pbExt.Margin = new System.Windows.Forms.Padding(0);
+            this.pbExt.Name = "pbExt";
+            this.pbExt.Size = new System.Drawing.Size(193, 168);
+            this.pbExt.SizeMode = System.Windows.Forms.PictureBoxSizeMode.CenterImage;
+            this.pbExt.TabIndex = 3;
+            this.pbExt.TabStop = false;
+            this.toolTip1.SetToolTip(this.pbExt, "Calling extension is unknown");
+            this.pbExt.DoubleClick += new System.EventHandler(this.pbExt_DoubleClick);
             // 
             // frmMain
             // 
@@ -386,18 +386,19 @@ namespace nmf_view
             this.MinimumSize = new System.Drawing.Size(830, 350);
             this.Name = "frmMain";
             this.Text = "NativeMessaging Meddler";
+            this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.frmMain_FormClosed);
             this.Load += new System.EventHandler(this.frmMain_Load);
             this.tcApp.ResumeLayout(false);
             this.pageMonitor.ResumeLayout(false);
             this.pnlTop.ResumeLayout(false);
             this.pnlTop.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.pbApp)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.pbExt)).EndInit();
             this.pageRegisteredHosts.ResumeLayout(false);
             this.pnlConfigureControls.ResumeLayout(false);
             this.pnlConfigureControls.PerformLayout();
             this.pageAbout.ResumeLayout(false);
             this.pageAbout.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.pbApp)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.pbExt)).EndInit();
             this.ResumeLayout(false);
 
         }

@@ -2,7 +2,7 @@
 using System.Runtime.InteropServices;
 
 [assembly: AssemblyTitle("NativeMessaging Meddler")]
-[assembly: AssemblyDescription("Debug communication with Chromium NativeMessage Hosts.")]
+[assembly: AssemblyDescription("Debug communication with Chromium NativeMessaging Hosts.")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Bayden Systems")]
 [assembly: AssemblyProduct("NMM")]

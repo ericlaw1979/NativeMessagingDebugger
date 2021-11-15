@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
+
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
@@ -28,6 +29,8 @@ namespace nmf_view
 
         static app_state oSettings;
         static readonly HttpClient client = new HttpClient();
+
+        private StreamWriter swLogfile = null;
 
         public frmMain()
         {
@@ -105,10 +108,8 @@ namespace nmf_view
                     }
                     iRead += iThisRead;
                     string sMessage = Encoding.UTF8.GetString(buffer, 0, iThisRead);
-                    if (oSettings.bLogMessageBodies)
-                    {
-                        log(sMessage);
-                    }
+                    log(sMessage, true);
+
                     if (oSettings.bSendToFiddler)
                     {
                         try
@@ -151,13 +152,48 @@ namespace nmf_view
             }
         }
 
-        private void log(string sMsg)
+        private void log(string sMsg, bool bIsBody = false)
         {
             sMsg = $"{DateTime.Now:HH:mm:ss:ffff} - {sMsg}";
-            this.BeginInvoke((MethodInvoker)delegate
+            if (!bIsBody || oSettings.bLogMessageBodies)
             {
-                txtLog.AppendText(sMsg + "\r\n");
-            });
+                this.BeginInvoke((MethodInvoker)delegate
+                {
+                    txtLog.AppendText(sMsg + "\r\n");
+                });
+            }
+            if (null != swLogfile)
+            {
+                try
+                {
+                    swLogfile.WriteLine(sMsg);
+                }
+                catch { }
+            }
+        }
+
+        private void CreateLogfile()
+        {
+            CloseLogfile();
+
+            string sLeafFilename = $"NativeMessages-{DateTime.Now.ToString("MMdd_HH-mm-ss")}.txt";
+            try
+            {
+                swLogfile = File.CreateText(Environment.GetFolderPath(Environment.SpecialFolder.Desktop) + Path.DirectorySeparatorChar + sLeafFilename);
+                swLogfile.Write(this.txtLog.Text);
+            }
+            catch (Exception eX)
+            {
+                log($"Creating log file [{sLeafFilename}] failed; {eX.Message}");
+            }
+        }
+
+        private void CloseLogfile()
+        {
+            if (null != swLogfile)
+            {
+                swLogfile.Close();
+            }
         }
 
         private void frmMain_Load(object sender, EventArgs e)
@@ -212,7 +248,18 @@ namespace nmf_view
             if (e.Index == 1) { oSettings.bSendToFiddler = (e.NewValue == CheckState.Checked); return; }
             if (e.Index == 2) { oSettings.bPropagateClosures = (e.NewValue == CheckState.Checked); return; }
             if (e.Index == 3) { oSettings.bLogMessageBodies = (e.NewValue == CheckState.Checked); return; }
-            if (e.Index == 4) { oSettings.bLogToDesktop = (e.NewValue == CheckState.Checked); return; }
+            if (e.Index == 4) {
+                oSettings.bLogToDesktop = (e.NewValue == CheckState.Checked);
+                if (oSettings.bLogToDesktop)
+                {
+                    CreateLogfile();
+                }
+                else
+                {
+                    CloseLogfile();
+                }
+                return; 
+            }
         }
 
         private void pbApp_Click(object sender, EventArgs e)
@@ -337,6 +384,13 @@ namespace nmf_view
                 RegisteredHosts.HostEntry oHE = (RegisteredHosts.HostEntry)oLVI.Tag;
                 Utilities.OpenRegeditTo(oHE.RegistryKeyPath);
             }
+        }
+
+        private void frmMain_FormClosed(object sender, FormClosedEventArgs e)
+        {
+            detachApp();
+            detachExtension();
+            CloseLogfile();
         }
     }
 }
