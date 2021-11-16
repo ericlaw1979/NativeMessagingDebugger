@@ -37,6 +37,15 @@ namespace nmf_view
             InitializeComponent();
         }
 
+        public bool IsAppAttached() {
+            return oSettings.strmToApp != null;
+        }
+
+        public bool IsExtensionAttached()
+        {
+            return oSettings.strmToExt != null;
+        }
+
         private void markExtensionDetached()
         {
             pbExt.BackColor = Color.DarkGray;
@@ -134,22 +143,33 @@ namespace nmf_view
 
                     if (oSettings.bEchoToSource)
                     {
-                        byte[] arrPayload = Encoding.UTF8.GetBytes(sMessage);
-                        byte[] arrSize = BitConverter.GetBytes(arrPayload.Length);
-                        await oSettings.strmToExt.WriteAsync(arrSize, 0, 4);
-                        await oSettings.strmToExt.WriteAsync(arrPayload, 0, arrPayload.Length);
+                        await WriteToExtension(sMessage);
                     }
 
                     if (null != oSettings.strmToApp)
                     {
-                        byte[] arrPayload = Encoding.UTF8.GetBytes(sMessage);
-                        byte[] arrSize = BitConverter.GetBytes(arrPayload.Length);
-                        await oSettings.strmToApp.WriteAsync(arrSize, 0, 4);
-                        await oSettings.strmToApp.WriteAsync(arrPayload, 0, arrPayload.Length);
-                        await oSettings.strmToApp.FlushAsync();
+                        await WriteToApp(sMessage);
                     }
                 }
             }
+        }
+
+        private static async Task WriteToApp(string sMessage)
+        {
+            byte[] arrPayload = Encoding.UTF8.GetBytes(sMessage);
+            byte[] arrSize = BitConverter.GetBytes(arrPayload.Length);
+            await oSettings.strmToApp.WriteAsync(arrSize, 0, 4);
+            await oSettings.strmToApp.WriteAsync(arrPayload, 0, arrPayload.Length);
+            await oSettings.strmToApp.FlushAsync();
+        }
+
+        private static async Task WriteToExtension(string sMessage)
+        {
+            byte[] arrPayload = Encoding.UTF8.GetBytes(sMessage);
+            byte[] arrSize = BitConverter.GetBytes(arrPayload.Length);
+            await oSettings.strmToExt.WriteAsync(arrSize, 0, 4);
+            await oSettings.strmToExt.WriteAsync(arrPayload, 0, arrPayload.Length);
+            await oSettings.strmToExt.FlushAsync();
         }
 
         private void log(string sMsg, bool bIsBody = false)
@@ -391,6 +411,28 @@ namespace nmf_view
             detachApp();
             detachExtension();
             CloseLogfile();
+        }
+
+        private void txtSendToApp_TextChanged(object sender, EventArgs e)
+        {
+            btnSendToApp.Enabled = ((txtSendToApp.TextLength > 0) && IsAppAttached());
+        }
+
+        private void txtSendToExtension_TextChanged(object sender, EventArgs e)
+        {
+            btnSendToExtension.Enabled = ((txtSendToExtension.TextLength > 0) && IsExtensionAttached());
+        }
+
+        private void btnSendToApp_Click(object sender, EventArgs e)
+        {
+            txtSendToApp.Text = txtSendToApp.Text.Trim();
+            WriteToApp(txtSendToApp.Text);
+        }
+
+        private void btnSendToExtension_Click(object sender, EventArgs e)
+        {
+            txtSendToApp.Text = txtSendToApp.Text.Trim();
+            WriteToExtension(txtSendToExtension.Text);
         }
     }
 }

@@ -117,6 +117,70 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+  <data name="pbApp.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+    <value>
+        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
+</value>
+  </data>
   <metadata name="toolTip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>17, 17</value>
   </metadata>
@@ -126,7 +190,6 @@
   <data name="lblQuickStart.Text" xml:space="preserve">
     <value>QuickStart: Native Messaging allows a web browser extension to send and receive messages from an application running outside of the browser's sandbox. To do so, the browser extension calls connectNative() to launch the application. After the application is launched, the extension and application can communicate by passing length-prefixed UTF-8 JSON-encoded messages between each other. This Meddler application can inject itself into that process, such that the browser will create it instead of the Native Message Host application. This app with then spawn that app and shuffle messages back and forth between the extension and the app, logging each message and optionally modifying it.</value>
   </data>
-  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="$this.Icon" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
         AAABAAQAMDAAAAEAIACoJQAARgAAACAgAAABACAAqBAAAO4lAAAYGAAAAQAgAIgJAACWNgAAEBAAAAEA

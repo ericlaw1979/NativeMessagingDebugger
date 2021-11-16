@@ -51,6 +51,14 @@ namespace nmf_view
             this.label1 = new System.Windows.Forms.Label();
             this.lnkGithub = new System.Windows.Forms.LinkLabel();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
+            this.pbApp = new System.Windows.Forms.PictureBox();
+            this.pbExt = new System.Windows.Forms.PictureBox();
+            this.pageInjector = new System.Windows.Forms.TabPage();
+            this.scInjector = new System.Windows.Forms.SplitContainer();
+            this.btnSendToExtension = new System.Windows.Forms.Button();
+            this.txtSendToExtension = new System.Windows.Forms.TextBox();
+            this.btnSendToApp = new System.Windows.Forms.Button();
+            this.txtSendToApp = new System.Windows.Forms.TextBox();
             this.lvHosts = new nmf_view.HostListView();
             this.chName = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.colPriority = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
@@ -58,8 +66,6 @@ namespace nmf_view
             this.chDescription = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.chBrowsers = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.chExtensions = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.pbApp = new System.Windows.Forms.PictureBox();
-            this.pbExt = new System.Windows.Forms.PictureBox();
             chManifest = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.tcApp.SuspendLayout();
             this.pageMonitor.SuspendLayout();
@@ -69,6 +75,11 @@ namespace nmf_view
             this.pageAbout.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pbApp)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.pbExt)).BeginInit();
+            this.pageInjector.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.scInjector)).BeginInit();
+            this.scInjector.Panel1.SuspendLayout();
+            this.scInjector.Panel2.SuspendLayout();
+            this.scInjector.SuspendLayout();
             this.SuspendLayout();
             // 
             // tcApp
@@ -76,6 +87,7 @@ namespace nmf_view
             this.tcApp.Alignment = System.Windows.Forms.TabAlignment.Bottom;
             this.tcApp.Controls.Add(this.pageMonitor);
             this.tcApp.Controls.Add(this.pageRegisteredHosts);
+            this.tcApp.Controls.Add(this.pageInjector);
             this.tcApp.Controls.Add(this.pageAbout);
             this.tcApp.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tcApp.Location = new System.Drawing.Point(0, 0);
@@ -281,6 +293,113 @@ namespace nmf_view
             this.lnkGithub.UseCompatibleTextRendering = true;
             this.lnkGithub.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.lnkGithub_LinkClicked);
             // 
+            // pbApp
+            // 
+            this.pbApp.Image = ((System.Drawing.Image)(resources.GetObject("pbApp.Image")));
+            this.pbApp.Location = new System.Drawing.Point(711, -4);
+            this.pbApp.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            this.pbApp.Name = "pbApp";
+            this.pbApp.Size = new System.Drawing.Size(193, 172);
+            this.pbApp.SizeMode = System.Windows.Forms.PictureBoxSizeMode.CenterImage;
+            this.pbApp.TabIndex = 2;
+            this.pbApp.TabStop = false;
+            this.pbApp.Click += new System.EventHandler(this.pbApp_Click);
+            this.pbApp.DoubleClick += new System.EventHandler(this.pbApp_DoubleClick);
+            // 
+            // pbExt
+            // 
+            this.pbExt.Image = global::nmf_view.Properties.Resources.ext;
+            this.pbExt.Location = new System.Drawing.Point(0, 0);
+            this.pbExt.Margin = new System.Windows.Forms.Padding(0);
+            this.pbExt.Name = "pbExt";
+            this.pbExt.Size = new System.Drawing.Size(193, 168);
+            this.pbExt.SizeMode = System.Windows.Forms.PictureBoxSizeMode.CenterImage;
+            this.pbExt.TabIndex = 3;
+            this.pbExt.TabStop = false;
+            this.toolTip1.SetToolTip(this.pbExt, "Calling extension is unknown");
+            this.pbExt.DoubleClick += new System.EventHandler(this.pbExt_DoubleClick);
+            // 
+            // pageInjector
+            // 
+            this.pageInjector.Controls.Add(this.scInjector);
+            this.pageInjector.Location = new System.Drawing.Point(4, 4);
+            this.pageInjector.Name = "pageInjector";
+            this.pageInjector.Size = new System.Drawing.Size(1471, 823);
+            this.pageInjector.TabIndex = 3;
+            this.pageInjector.Text = "Injector";
+            this.pageInjector.UseVisualStyleBackColor = true;
+            // 
+            // scInjector
+            // 
+            this.scInjector.BackColor = System.Drawing.Color.Transparent;
+            this.scInjector.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.scInjector.Location = new System.Drawing.Point(0, 0);
+            this.scInjector.Name = "scInjector";
+            this.scInjector.Orientation = System.Windows.Forms.Orientation.Horizontal;
+            // 
+            // scInjector.Panel1
+            // 
+            this.scInjector.Panel1.Controls.Add(this.btnSendToApp);
+            this.scInjector.Panel1.Controls.Add(this.txtSendToApp);
+            // 
+            // scInjector.Panel2
+            // 
+            this.scInjector.Panel2.Controls.Add(this.txtSendToExtension);
+            this.scInjector.Panel2.Controls.Add(this.btnSendToExtension);
+            this.scInjector.Size = new System.Drawing.Size(1471, 823);
+            this.scInjector.SplitterDistance = 411;
+            this.scInjector.TabIndex = 4;
+            // 
+            // btnSendToExtension
+            // 
+            this.btnSendToExtension.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnSendToExtension.Enabled = false;
+            this.btnSendToExtension.Location = new System.Drawing.Point(1021, 349);
+            this.btnSendToExtension.Name = "btnSendToExtension";
+            this.btnSendToExtension.Size = new System.Drawing.Size(442, 41);
+            this.btnSendToExtension.TabIndex = 4;
+            this.btnSendToExtension.Text = "Send to Extension";
+            this.btnSendToExtension.UseVisualStyleBackColor = true;
+            this.btnSendToExtension.Click += new System.EventHandler(this.btnSendToExtension_Click);
+            // 
+            // txtSendToExtension
+            // 
+            this.txtSendToExtension.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.txtSendToExtension.Font = new System.Drawing.Font("Consolas", 10F);
+            this.txtSendToExtension.Location = new System.Drawing.Point(8, 3);
+            this.txtSendToExtension.Multiline = true;
+            this.txtSendToExtension.Name = "txtSendToExtension";
+            this.txtSendToExtension.Size = new System.Drawing.Size(1455, 340);
+            this.txtSendToExtension.TabIndex = 3;
+            this.txtSendToExtension.TextChanged += new System.EventHandler(this.txtSendToExtension_TextChanged);
+            // 
+            // btnSendToApp
+            // 
+            this.btnSendToApp.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnSendToApp.Enabled = false;
+            this.btnSendToApp.Location = new System.Drawing.Point(1021, 351);
+            this.btnSendToApp.Name = "btnSendToApp";
+            this.btnSendToApp.Size = new System.Drawing.Size(442, 41);
+            this.btnSendToApp.TabIndex = 5;
+            this.btnSendToApp.Text = "Send to Client";
+            this.btnSendToApp.UseVisualStyleBackColor = true;
+            this.btnSendToApp.Click += new System.EventHandler(this.btnSendToApp_Click);
+            // 
+            // txtSendToApp
+            // 
+            this.txtSendToApp.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.txtSendToApp.Font = new System.Drawing.Font("Consolas", 10F);
+            this.txtSendToApp.Location = new System.Drawing.Point(8, 8);
+            this.txtSendToApp.Multiline = true;
+            this.txtSendToApp.Name = "txtSendToApp";
+            this.txtSendToApp.Size = new System.Drawing.Size(1455, 337);
+            this.txtSendToApp.TabIndex = 5;
+            this.txtSendToApp.TextChanged += new System.EventHandler(this.txtSendToApp_TextChanged);
+            // 
             // lvHosts
             // 
             this.lvHosts.CheckBoxes = true;
@@ -348,32 +467,6 @@ namespace nmf_view
             // 
             this.chExtensions.Text = "Extensions";
             // 
-            // pbApp
-            // 
-            this.pbApp.Image = global::nmf_view.Properties.Resources.app;
-            this.pbApp.Location = new System.Drawing.Point(711, -4);
-            this.pbApp.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
-            this.pbApp.Name = "pbApp";
-            this.pbApp.Size = new System.Drawing.Size(193, 168);
-            this.pbApp.SizeMode = System.Windows.Forms.PictureBoxSizeMode.CenterImage;
-            this.pbApp.TabIndex = 2;
-            this.pbApp.TabStop = false;
-            this.pbApp.Click += new System.EventHandler(this.pbApp_Click);
-            this.pbApp.DoubleClick += new System.EventHandler(this.pbApp_DoubleClick);
-            // 
-            // pbExt
-            // 
-            this.pbExt.Image = global::nmf_view.Properties.Resources.ext;
-            this.pbExt.Location = new System.Drawing.Point(0, 0);
-            this.pbExt.Margin = new System.Windows.Forms.Padding(0);
-            this.pbExt.Name = "pbExt";
-            this.pbExt.Size = new System.Drawing.Size(193, 168);
-            this.pbExt.SizeMode = System.Windows.Forms.PictureBoxSizeMode.CenterImage;
-            this.pbExt.TabIndex = 3;
-            this.pbExt.TabStop = false;
-            this.toolTip1.SetToolTip(this.pbExt, "Calling extension is unknown");
-            this.pbExt.DoubleClick += new System.EventHandler(this.pbExt_DoubleClick);
-            // 
             // frmMain
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(12F, 30F);
@@ -399,6 +492,13 @@ namespace nmf_view
             this.pageAbout.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pbApp)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.pbExt)).EndInit();
+            this.pageInjector.ResumeLayout(false);
+            this.scInjector.Panel1.ResumeLayout(false);
+            this.scInjector.Panel1.PerformLayout();
+            this.scInjector.Panel2.ResumeLayout(false);
+            this.scInjector.Panel2.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.scInjector)).EndInit();
+            this.scInjector.ResumeLayout(false);
             this.ResumeLayout(false);
 
         }
@@ -431,5 +531,11 @@ namespace nmf_view
         private System.Windows.Forms.ColumnHeader chBrowsers;
         private System.Windows.Forms.ColumnHeader chExtensions;
         private System.Windows.Forms.RichTextBox txtLog;
+        private System.Windows.Forms.TabPage pageInjector;
+        private System.Windows.Forms.SplitContainer scInjector;
+        private System.Windows.Forms.Button btnSendToExtension;
+        private System.Windows.Forms.Button btnSendToApp;
+        private System.Windows.Forms.TextBox txtSendToExtension;
+        private System.Windows.Forms.TextBox txtSendToApp;
     }
 }
