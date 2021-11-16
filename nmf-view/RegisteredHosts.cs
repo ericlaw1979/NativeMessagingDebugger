@@ -40,6 +40,10 @@ namespace nmf_view
             }
         };
 
+        // TODO: Mozilla?
+        // HKEY_CURRENT_USER\Software\Mozilla\NativeMessagingHosts\ping_pong
+        // HKEY_LOCAL_MACHINE\Software\Mozilla\NativeMessagingHosts\ping_pong
+
         // HKCU is prioritized over HKLM.
         private static readonly RegistryHive[] hives = { RegistryHive.CurrentUser, RegistryHive.LocalMachine };
         private static readonly string[] keysPriorityOrder = {

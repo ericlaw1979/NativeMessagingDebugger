@@ -5,13 +5,15 @@
   "description": "Call the NativeMessagingHost on every navigation",
   "version": "1.0.0.0",
   "author": "Eric Lawrence (@ericlaw)",
-  "minimum_chrome_version": "95",
+  "minimum_chrome_version": "51",
 
   "background": {
     "scripts": ["background.js"],
     "persistent": false
   },
-
+  
+  "browser_action": {},
+  
   "permissions": [
     "tabs",
     "nativeMessaging",

@@ -36,7 +36,7 @@ function init()
   try {
     portNMH = chrome.runtime.connectNative('com.bayden.nmf.demo');
     portNMH.onDisconnect.addListener( () => {
-      console.log("!!! the NativeMessagingHost disconnected; " + chrome.runtime.lastError.message);
+      console.log("!!!NativeMessagingHost.onDisconnect(); " + chrome.runtime.lastError.message);
     });
     portNMH.onMessage.addListener( (msg) => {
       console.log("@@@ Got Message from NMH: ");
@@ -44,7 +44,7 @@ function init()
     });
   }
   catch (e) {
-    console.log('!!! failed to connect to nativeMessagingHost! ' + e.message + " " + chrome.runtime.lastError.message);
+    console.log('!!!Failed to connect to nativeMessagingHost! ' + e.message + " " + chrome.runtime.lastError.message);
   }
   console.log('init(): completed');
 }
@@ -58,3 +58,9 @@ chrome.webNavigation.onBeforeNavigate.addListener(function (data) {
   };
   nmhSend(oEvent);
 });
+
+chrome.browserAction.onClicked.addListener (
+  (t)=>{
+    chrome.tabs.create({ url: "/monitor.html" });
+  }
+)
