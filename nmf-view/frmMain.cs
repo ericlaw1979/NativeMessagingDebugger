@@ -13,6 +13,13 @@ namespace nmf_view
 {
     public partial class frmMain : Form
     {
+        #region Boilerplate
+        public frmMain()
+        {
+            InitializeComponent();
+        }
+        #endregion Boilerplate
+
         const string sFiddlerPrefix = "http://127.0.0.1:8888";
 
         struct app_state
@@ -54,9 +61,25 @@ namespace nmf_view
             await oSettings.strmToExt.FlushAsync();
         }
 
-        public frmMain()
+        private void MaybeWriteToLogfile(string sMsg)
         {
-            InitializeComponent();
+            if (!oSettings.bLogToDesktop || (null == swLogfile)) return;
+
+            try
+            {
+                swLogfile.WriteLine(sMsg);
+            }
+            catch { }
+        }
+        private void MaybeWriteBytesToLogfile(string sPrefix, byte[] arrMsg, int iStart, int iLength)
+        {
+            if (!oSettings.bLogToDesktop || (null == swLogfile)) return;
+
+            try
+            {
+                swLogfile.WriteLine($"{DateTime.Now:HH:mm:ss:ffff} - {sPrefix} {Convert.ToBase64String(arrMsg, iStart, iLength)}");
+            }
+            catch { }
         }
 
         public bool IsAppAttached() {
@@ -104,73 +127,76 @@ namespace nmf_view
 
             while (true)
             {
-                int iSizeRead = 0;
-                while (iSizeRead < 4)
+                int cbSizeRead = 0;
+                while (cbSizeRead < 4)
                 {
-                    int iThisSizeRead = await oSettings.strmFromExt.ReadAsync(arrLenBytes, iSizeRead, arrLenBytes.Length - iSizeRead);
-                    if (iThisSizeRead < 1)
+                    int cbThisRead = await oSettings.strmFromExt.ReadAsync(arrLenBytes, cbSizeRead, arrLenBytes.Length - cbSizeRead);
+                    if (cbThisRead < 1)
                     {
-                        log($"Got EOF while trying to read message size from (Extension); got only {iSizeRead} bytes. Disconnecting.");
+                        log($"Got EOF while trying to read message size from (Extension); got only {cbSizeRead} bytes. Disconnecting.");
                         markExtensionDetached();
                         return;
                     }
-                    iSizeRead += iThisSizeRead;
+                    MaybeWriteBytesToLogfile("ReadSizeFromExt-RawRead: ", arrLenBytes, cbSizeRead, cbThisRead);
+                    cbSizeRead += cbThisRead;
                 }
 
-                Int32 cBytes = BitConverter.ToInt32(arrLenBytes, 0);
-                log($"Promised a message of length: {cBytes}");
-                if (cBytes == 0)
+                Int32 cbBodyPromised = BitConverter.ToInt32(arrLenBytes, 0);
+                log($"Extension promised a message of length: {cbBodyPromised:N0}");
+                if (cbBodyPromised == 0)
                 {
                     log("Got an empty (size==0) message. Is that legal?? Disconnecting.");
                     markExtensionDetached();
                     return;
                 }
 
-                byte[] buffer = new byte[cBytes];
-                int iRead = 0;
+                byte[] buffer = new byte[cbBodyPromised];
+                int cbBodyRead = 0;
 
-                while (iRead < cBytes)
+                while (cbBodyRead < cbBodyPromised)
                 {
-                    int iThisRead = await oSettings.strmFromExt.ReadAsync(buffer, 0, buffer.Length);
-                    if (iThisRead < 1)
+                    int cbThisRead = await oSettings.strmFromExt.ReadAsync(buffer, cbBodyRead, cbBodyPromised - cbBodyRead);
+                    if (cbThisRead < 1)
                     {
-                        log($"Got EOF while reading message data from (stdin); got only {iRead} bytes. Disconnecting.");
+                        log($"Got EOF while reading message data from (Extension); got only {cbBodyRead} bytes. Disconnecting.");
                         markExtensionDetached();
                     }
-                    iRead += iThisRead;
-                    string sMessage = Encoding.UTF8.GetString(buffer, 0, iThisRead);
-                    log(sMessage, true);
+                    MaybeWriteBytesToLogfile("ReadBodyFromExt-RawRead: ", buffer, cbBodyRead, cbThisRead);
+                    cbBodyRead += cbThisRead;
+                }
+                string sMessage = Encoding.UTF8.GetString(buffer, 0, cbBodyRead);
+                log(sMessage, true);
 
-                    if (oSettings.bSendToFiddler)
+                if (oSettings.bSendToFiddler)
+                {
+                    try
                     {
-                        try
-                        {
-                            StringContent body = new StringContent(sMessage, Encoding.UTF8, "application/json");
+                        // TODO: Should we POST the byte array instead?
+                        StringContent body = new StringContent(sMessage, Encoding.UTF8, "application/json");
 
-                            HttpResponseMessage response = await client.PostAsync($"{sFiddlerPrefix}/ExtToApp/{oSettings.sExtensionID ?? "noID"}/{oSettings.sExeName}", body);
-                            if (response.IsSuccessStatusCode)
+                        HttpResponseMessage response = await client.PostAsync($"{sFiddlerPrefix}/ExtToApp/{oSettings.sExtensionID ?? "noID"}/{oSettings.sExeName}", body);
+                        if (response.IsSuccessStatusCode)
+                        {
+                            string sNewBody = await response.Content.ReadAsStringAsync();
+                            if (!sNewBody.Contains("Fiddler Echo"))
                             {
-                                string sNewBody = await response.Content.ReadAsStringAsync();
-                                if (!sNewBody.Contains("Fiddler Echo"))
-                                {
-                                    sMessage = sNewBody;
-                                }
+                                sMessage = sNewBody;
                             }
                         }
-                        catch (HttpRequestException e)
-                        {
-                            log($"Call to Fiddler failed: {e.Message}");
-                        }
                     }
-                    if (oSettings.bReflectToExtension &&
-                        (sMessage.Length < (1024*1024)))    // Don't reflect messages over 1mb. They're illegal!
+                    catch (HttpRequestException e)
                     {
-                        await WriteToExtension(sMessage);
+                        log($"Call to Fiddler failed: {e.Message}");
                     }
-                    if (null != oSettings.strmToApp)
-                    {
-                        await WriteToApp(sMessage);
-                    }
+                }
+                if (oSettings.bReflectToExtension &&
+                    (sMessage.Length < (1024*1024)))    // Don't reflect messages over 1mb. They're illegal!
+                {
+                    await WriteToExtension(sMessage);
+                }
+                if (null != oSettings.strmToApp)
+                {
+                    await WriteToApp(sMessage);
                 }
             }
         }
@@ -181,74 +207,77 @@ namespace nmf_view
 
             while (true)
             {
-                int iSizeRead = 0;
-                while (iSizeRead < 4)
+                int cbSizeRead = 0;
+                while (cbSizeRead < 4)
                 {
-                    int iThisSizeRead = await oSettings.strmFromApp.ReadAsync(arrLenBytes, iSizeRead, arrLenBytes.Length - iSizeRead);
-                    if (iThisSizeRead < 1)
+                    int cbThisRead = await oSettings.strmFromApp.ReadAsync(arrLenBytes, cbSizeRead, arrLenBytes.Length - cbSizeRead);
+                    if (cbThisRead < 1)
                     {
-                        log($"Got EOF while trying to read message size from (App); got only {iSizeRead} bytes. Disconnecting.");
+                        log($"Got EOF while trying to read message size from (App); got only {cbSizeRead} bytes. Disconnecting.");
                         markAppDetached();
                         return;
                     }
-                    iSizeRead += iThisSizeRead;
+                    MaybeWriteBytesToLogfile("ReadSizeFromApp-RawRead: ", arrLenBytes, cbSizeRead, cbThisRead);
+                    cbSizeRead += cbThisRead;
                 }
 
-                Int32 cBytes = BitConverter.ToInt32(arrLenBytes, 0);
-                log($"Promised a message of length: {cBytes}");
-                if (cBytes == 0)
+                Int32 cbBodyPromised = BitConverter.ToInt32(arrLenBytes, 0);
+                log($"App promised a message of length: {cbBodyPromised:N0}");
+                if (cbBodyPromised == 0)
                 {
-                    log("Got an empty (size==0) message from App. Is that legal?? Disconnecting.");
-                    markAppDetached();
+                    log("Got an empty (size==0) message. Is that legal?? Disconnecting.");
+                    markExtensionDetached();
                     return;
                 }
 
-                if (cBytes > 1024*1024)
+                if (cbBodyPromised > 1024*1024)
                 {
-                    log($"Illegal message size from the NativeMessaging App. Messages are limited to 1mb but this app wants to send {cBytes:N0} bytes.");
-                    // TODO: Detach?
+                    log($"Illegal message size from the NativeMessaging App. Messages are limited to 1mb but this app wants to send {cbBodyPromised:N0} bytes.");
+                    // TODO: Skip it? Detach?
                 }
 
-                byte[] buffer = new byte[cBytes];
-                int iRead = 0;
+                byte[] buffer = new byte[cbBodyPromised];
+                int cbBodyRead = 0;
 
-                while (iRead < cBytes)
+                while (cbBodyRead < cbBodyPromised)
                 {
-                    int iThisRead = await oSettings.strmFromApp.ReadAsync(buffer, 0, buffer.Length);
-                    if (iThisRead < 1)
+                    int cbThisRead = await oSettings.strmFromApp.ReadAsync(buffer, cbBodyRead, cbBodyPromised - cbBodyRead);
+                    if (cbThisRead < 1)
                     {
-                        log($"Got EOF while reading message data from (App); got only {iRead} bytes. Disconnecting.");
+                        log($"Got EOF while reading message data from (App); got only {cbBodyRead} bytes. Disconnecting.");
                         markAppDetached();
                     }
-                    iRead += iThisRead;
-                    string sMessage = Encoding.UTF8.GetString(buffer, 0, iThisRead);
-                    log(sMessage, true);
+                    MaybeWriteBytesToLogfile("ReadBodyFromApp-RawRead: ", buffer, cbBodyRead, cbThisRead);
+                    cbBodyRead += cbThisRead;
+                }
 
-                    if (oSettings.bSendToFiddler)
+                string sMessage = Encoding.UTF8.GetString(buffer, 0, cbBodyPromised);
+                log(sMessage, true);
+
+                if (oSettings.bSendToFiddler)
+                {
+                    try
                     {
-                        try
-                        {
-                            StringContent body = new StringContent(sMessage, Encoding.UTF8, "application/json");
+                        StringContent body = new StringContent(sMessage, Encoding.UTF8, "application/json");
 
-                            HttpResponseMessage response = await client.PostAsync($"{sFiddlerPrefix}/AppToExt/{oSettings.sExeName}/{oSettings.sExtensionID ?? "noID"}", body);
-                            if (response.IsSuccessStatusCode)
+                        HttpResponseMessage response = await client.PostAsync($"{sFiddlerPrefix}/AppToExt/{oSettings.sExeName}/{oSettings.sExtensionID ?? "noID"}", body);
+                        if (response.IsSuccessStatusCode)
+                        {
+                            string sNewBody = await response.Content.ReadAsStringAsync();
+                            if (!sNewBody.Contains("Fiddler Echo"))
                             {
-                                string sNewBody = await response.Content.ReadAsStringAsync();
-                                if (!sNewBody.Contains("Fiddler Echo"))
-                                {
-                                    sMessage = sNewBody;
-                                }
+                                sMessage = sNewBody;
                             }
                         }
-                        catch (HttpRequestException e)
-                        {
-                            log($"Call to Fiddler failed: {e.Message}");
-                        }
                     }
-                    if (null != oSettings.strmToExt)
+                    catch (HttpRequestException e)
                     {
-                        await WriteToExtension(sMessage);
+                        log($"Call to Fiddler failed: {e.Message}");
                     }
+                }
+                if (null != oSettings.strmToExt)
+                {
+                    await WriteToExtension(sMessage);
                 }
             }
         }
@@ -262,14 +291,7 @@ namespace nmf_view
                     txtLog.AppendText(sMsg + "\r\n");
                 });
             }
-            if (null != swLogfile)
-            {
-                try
-                {
-                    swLogfile.WriteLine(sMsg);
-                }
-                catch { }
-            }
+            MaybeWriteToLogfile(sMsg);
         }
 
         private void CreateLogfile()
@@ -331,7 +353,7 @@ namespace nmf_view
             toolTip1.SetToolTip(pbApp, $"Click to set the ClientHandler to another instance of this app.");
             log("Listening for messages...");
 
-            clbOptions.SetItemChecked(1, true);
+            // clbOptions.SetItemChecked(1, true); Fiddler
             clbOptions.SetItemChecked(2, true);
             clbOptions.SetItemChecked(3, true);
 
@@ -543,8 +565,8 @@ namespace nmf_view
         private void lvHosts_ItemCheck(object sender, ItemCheckEventArgs e)
         {
             // If we're not elevated, we cannot readily change anything in the SystemRegistered group.
-            // TODO:Note that that's sorta untrue; Chromium prioritizes HKCU over HKLM by default unless
-            // you've set a policy to ignore HKCU. So we could conceivably just clone a HKLM registration to HKCU...
+            // TODO: Note that that's sorta untrue; Chromium prioritizes HKCU over HKLM by default unless
+            // you've set a policy to ignore HKCU. So we could conceivably just clone a HKLM registration to 32-bit HKCU...
             if (!Utilities.IsUserAnAdmin() && lvHosts.Items[e.Index].Group == lvHosts.Groups[1])
             {
                 e.NewValue = e.CurrentValue;
