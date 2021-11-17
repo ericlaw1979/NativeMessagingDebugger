@@ -1,9 +1,9 @@
-﻿using System;
+﻿using Microsoft.Win32;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
-
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
@@ -388,6 +388,7 @@ namespace nmf_view
                 myProcess.StartInfo.FileName = /*Application.ExecutablePath;//  */ @"C:\program files\windows security\browserCore\browserCore.exe";
                 myProcess.StartInfo.Arguments = $"chrome-extension://{oSettings.sExtensionID} --parent-window={oSettings.iParentWindow}"; // TODO: Parent window
                 myProcess.StartInfo.UseShellExecute = false;
+                myProcess.StartInfo.WorkingDirectory = Path.GetDirectoryName(myProcess.StartInfo.FileName);
 
                 // Hide by default; TODO: allow showing https://source.chromium.org/chromium/chromium/src/+/main:base/process/launch_win.cc;l=298;drc=1ad438dde6b39e1c0d04b8f8cb27c1a14ba6f90e
                 myProcess.StartInfo.CreateNoWindow = true;
@@ -441,26 +442,101 @@ namespace nmf_view
         {
             if (tcApp.SelectedTab == pageRegisteredHosts)
             {
-                lvHosts.Items.Clear();
-                List<RegisteredHosts.HostEntry> listHosts = RegisteredHosts.GetAllHosts();
-                if (!Utilities.IsUserAnAdmin()) lvHosts.Groups[1].Header = "System-Registered (HKLM); you must run this program as Admin to edit these.";
-                foreach (RegisteredHosts.HostEntry oHE in listHosts)
-                {
-                    var item = lvHosts.Items.Add(oHE.Name);
-                    item.Tag = oHE;
-                    item.ToolTipText = oHE.RegistryKeyPath;
-                    item.SubItems.Add(oHE.iPriority.ToString());
-                    item.SubItems.Add(oHE.ManifestFilename);
-                    item.SubItems.Add(oHE.Command);
-                    item.SubItems.Add(oHE.Description);
-                    item.SubItems.Add(oHE.SupportedBrowsers);
-                    item.SubItems.Add(oHE.AllowedExtensions);
+                PopulateHosts();
+            }else
+                if (tcApp.SelectedTab == pageTroubleshooter)
+            {
+                PopulateTroubleshooter();
+            }
+        }
 
-                    // If the Host is registered system-wide, it's only editable if this app is run at Admin.
-                    bool bSystemRegistration = (oHE.iPriority > 6);
-                    item.Group = lvHosts.Groups[bSystemRegistration ? 1 : 0];
-                    if (bSystemRegistration && !Utilities.IsUserAnAdmin()) item.BackColor = Color.FromArgb(0xE0, 0xE0, 0xE0);
+        static IEnumerable<string> EnumPipes(string sFilter)
+        {
+            bool MoveNextSafe(IEnumerator<string> enumerator)
+            {
+                const int Retries = 100;
+                for (int i = 0; i < Retries; i++)
+                {
+                    try
+                    {
+                        return enumerator.MoveNext();
+                    }
+                    catch (ArgumentException) { }
                 }
+                return false;
+            }
+
+            using (var enumerator = Directory.EnumerateFiles(@"\\.\pipe\").GetEnumerator())
+            {
+                while (MoveNextSafe(enumerator))
+                {
+                    if (!enumerator.Current.Contains(sFilter)) continue;
+                    yield return enumerator.Current;
+                }
+            }
+        }
+
+        private void PopulateTroubleshooter()
+        {
+            try
+            {
+                rtbTroubleshoot.AppendText("Chromium uses named pipes to write data into stdio for the NativeMessaging host application.\r\n\r\n" 
+                                         + "Currently active NativeMessaging named pipes:\r\n\r\n");
+                foreach (var sPipe in EnumPipes(".nativeMessaging."))
+                {
+                    // https://source.chromium.org/chromium/chromium/src/+/main:chrome/browser/extensions/api/messaging/native_process_launcher_win.cc;l=134;drc=09a4396a448775456084fe36bb84662f5757d988
+                    rtbTroubleshoot.AppendText($"{sPipe}\r\n");
+                    // It would be nice to show the owner here, but we can't because we cannot get the handle to the pipe
+                    // which only allows one connection.
+                    // https://docs.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-getnamedpipeserverprocessid
+                }
+            }
+            catch (Exception eX)
+            {
+                rtbTroubleshoot.AppendText($"Enumeration of named pipes failed: {eX.Message}");
+            }
+
+            rtbTroubleshoot.AppendText("=======================\r\n");
+
+            string sComSpec = Environment.GetEnvironmentVariable("COMSPEC");
+            if (sComSpec.IndexOf("cmd.exe", StringComparison.OrdinalIgnoreCase)<1)
+            {
+                rtbTroubleshoot.AppendText($"FATAL: Non-cmd.exe COMSPEC value will not work; {sComSpec}");
+            }
+
+            UInt64 ulPolicy = Convert.ToUInt64(Registry.GetValue(@"HKEY_CURRENT_USER\SOFTWARE\Policies\Microsoft\Windows\System", "DisableCMD", 0));
+            if (ulPolicy != 0)
+            {
+                rtbTroubleshoot.AppendText($"FATAL: cmd.exe is disabled by DisableCMD policy. NativeMessaging will not work.\r\n");
+            }
+        // todo: more troubleshooters
+        //
+        // https://bugs.chromium.org/p/chromium/issues/detail?id=416474&q=%22parent-window%22%20%22Native%20Messaging%20Host%22&can=1
+        //   ^ or & in path
+        //    https://bugs.chromium.org/p/chromium/issues/detail?id=335558&q=%22parent-window%22%20%22Native%20Messaging%20Host%22&can=1
+        }
+
+        private void PopulateHosts()
+        {
+            lvHosts.Items.Clear();
+            List<RegisteredHosts.HostEntry> listHosts = RegisteredHosts.GetAllHosts();
+            if (!Utilities.IsUserAnAdmin()) lvHosts.Groups[1].Header = "System-Registered (HKLM); you must run this program as Admin to edit these.";
+            foreach (RegisteredHosts.HostEntry oHE in listHosts)
+            {
+                var item = lvHosts.Items.Add(oHE.Name);
+                item.Tag = oHE;
+                item.ToolTipText = oHE.RegistryKeyPath;
+                item.SubItems.Add(oHE.iPriority.ToString());
+                item.SubItems.Add(oHE.ManifestFilename);
+                item.SubItems.Add(oHE.Command);
+                item.SubItems.Add(oHE.Description);
+                item.SubItems.Add(oHE.SupportedBrowsers);
+                item.SubItems.Add(oHE.AllowedExtensions);
+
+                // If the Host is registered system-wide, it's only editable if this app is run at Admin.
+                bool bSystemRegistration = (oHE.iPriority > 6);
+                item.Group = lvHosts.Groups[bSystemRegistration ? 1 : 0];
+                if (bSystemRegistration && !Utilities.IsUserAnAdmin()) item.BackColor = Color.FromArgb(0xE0, 0xE0, 0xE0);
             }
         }
 

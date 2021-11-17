@@ -117,6 +117,12 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <metadata name="chManifest.GenerateMember" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>False</value>
+  </metadata>
+  <data name="lblQuickStart.Text" xml:space="preserve">
+    <value>QuickStart: Native Messaging allows a web browser extension to send and receive messages from an application running outside of the browser's sandbox. To do so, the browser extension calls connectNative() to launch the application. After the application is launched, the extension and application can communicate by passing length-prefixed UTF-8 JSON-encoded messages between each other. This Meddler application can inject itself into that process, such that the browser will create it instead of the Native Message Host application. This app with then spawn that app and shuffle messages back and forth between the extension and the app, logging each message and optionally modifying it.</value>
+  </data>
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="pbApp.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
@@ -184,12 +190,9 @@
   <metadata name="toolTip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>17, 17</value>
   </metadata>
-  <metadata name="chManifest.GenerateMember" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>False</value>
+  <metadata name="toolTip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>17, 17</value>
   </metadata>
-  <data name="lblQuickStart.Text" xml:space="preserve">
-    <value>QuickStart: Native Messaging allows a web browser extension to send and receive messages from an application running outside of the browser's sandbox. To do so, the browser extension calls connectNative() to launch the application. After the application is launched, the extension and application can communicate by passing length-prefixed UTF-8 JSON-encoded messages between each other. This Meddler application can inject itself into that process, such that the browser will create it instead of the Native Message Host application. This app with then spawn that app and shuffle messages back and forth between the extension and the app, logging each message and optionally modifying it.</value>
-  </data>
   <data name="$this.Icon" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
         AAABAAQAMDAAAAEAIACoJQAARgAAACAgAAABACAAqBAAAO4lAAAYGAAAAQAgAIgJAACWNgAAEBAAAAEA
