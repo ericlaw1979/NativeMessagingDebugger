@@ -31,8 +31,8 @@ namespace nmf_view
         {
             this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(frmMain));
-            System.Windows.Forms.ListViewGroup listViewGroup3 = new System.Windows.Forms.ListViewGroup("User-Registered (HKCU)", System.Windows.Forms.HorizontalAlignment.Left);
-            System.Windows.Forms.ListViewGroup listViewGroup4 = new System.Windows.Forms.ListViewGroup("System-Registered (HKLM)", System.Windows.Forms.HorizontalAlignment.Left);
+            System.Windows.Forms.ListViewGroup listViewGroup1 = new System.Windows.Forms.ListViewGroup("User-Registered (HKCU)", System.Windows.Forms.HorizontalAlignment.Left);
+            System.Windows.Forms.ListViewGroup listViewGroup2 = new System.Windows.Forms.ListViewGroup("System-Registered (HKLM)", System.Windows.Forms.HorizontalAlignment.Left);
             System.Windows.Forms.ColumnHeader chManifest;
             this.tcApp = new System.Windows.Forms.TabControl();
             this.pageMonitor = new System.Windows.Forms.TabPage();
@@ -51,6 +51,8 @@ namespace nmf_view
             this.txtSendToApp = new System.Windows.Forms.TextBox();
             this.txtSendToExtension = new System.Windows.Forms.TextBox();
             this.btnSendToExtension = new System.Windows.Forms.Button();
+            this.pageTroubleshooter = new System.Windows.Forms.TabPage();
+            this.rtbTroubleshoot = new System.Windows.Forms.RichTextBox();
             this.pageAbout = new System.Windows.Forms.TabPage();
             this.lblQuickStart = new System.Windows.Forms.Label();
             this.lnkEric = new System.Windows.Forms.LinkLabel();
@@ -66,8 +68,6 @@ namespace nmf_view
             this.chDescription = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.chBrowsers = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.chExtensions = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.pageTroubleshooter = new System.Windows.Forms.TabPage();
-            this.rtbTroubleshoot = new System.Windows.Forms.RichTextBox();
             chManifest = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.tcApp.SuspendLayout();
             this.pageMonitor.SuspendLayout();
@@ -81,8 +81,8 @@ namespace nmf_view
             this.scInjector.Panel1.SuspendLayout();
             this.scInjector.Panel2.SuspendLayout();
             this.scInjector.SuspendLayout();
-            this.pageAbout.SuspendLayout();
             this.pageTroubleshooter.SuspendLayout();
+            this.pageAbout.SuspendLayout();
             this.SuspendLayout();
             // 
             // tcApp
@@ -130,6 +130,7 @@ namespace nmf_view
             this.txtLog.TabIndex = 3;
             this.txtLog.Text = "";
             this.txtLog.WordWrap = false;
+            this.txtLog.KeyDown += new System.Windows.Forms.KeyEventHandler(this.txtLog_KeyDown);
             // 
             // pnlTop
             // 
@@ -259,15 +260,15 @@ namespace nmf_view
             // 
             this.scInjector.Panel2.Controls.Add(this.txtSendToExtension);
             this.scInjector.Panel2.Controls.Add(this.btnSendToExtension);
-            this.scInjector.Size = new System.Drawing.Size(1471, 823);
-            this.scInjector.SplitterDistance = 411;
+            this.scInjector.Size = new System.Drawing.Size(1471, 829);
+            this.scInjector.SplitterDistance = 413;
             this.scInjector.TabIndex = 4;
             // 
             // btnSendToApp
             // 
             this.btnSendToApp.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.btnSendToApp.Enabled = false;
-            this.btnSendToApp.Location = new System.Drawing.Point(1021, 351);
+            this.btnSendToApp.Location = new System.Drawing.Point(1021, 353);
             this.btnSendToApp.Name = "btnSendToApp";
             this.btnSendToApp.Size = new System.Drawing.Size(442, 41);
             this.btnSendToApp.TabIndex = 5;
@@ -284,7 +285,7 @@ namespace nmf_view
             this.txtSendToApp.Location = new System.Drawing.Point(8, 8);
             this.txtSendToApp.Multiline = true;
             this.txtSendToApp.Name = "txtSendToApp";
-            this.txtSendToApp.Size = new System.Drawing.Size(1455, 337);
+            this.txtSendToApp.Size = new System.Drawing.Size(1455, 339);
             this.txtSendToApp.TabIndex = 5;
             this.txtSendToApp.TextChanged += new System.EventHandler(this.txtSendToApp_TextChanged);
             // 
@@ -297,7 +298,7 @@ namespace nmf_view
             this.txtSendToExtension.Location = new System.Drawing.Point(8, 3);
             this.txtSendToExtension.Multiline = true;
             this.txtSendToExtension.Name = "txtSendToExtension";
-            this.txtSendToExtension.Size = new System.Drawing.Size(1455, 340);
+            this.txtSendToExtension.Size = new System.Drawing.Size(1455, 344);
             this.txtSendToExtension.TabIndex = 3;
             this.txtSendToExtension.TextChanged += new System.EventHandler(this.txtSendToExtension_TextChanged);
             // 
@@ -305,13 +306,38 @@ namespace nmf_view
             // 
             this.btnSendToExtension.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.btnSendToExtension.Enabled = false;
-            this.btnSendToExtension.Location = new System.Drawing.Point(1021, 349);
+            this.btnSendToExtension.Location = new System.Drawing.Point(1021, 353);
             this.btnSendToExtension.Name = "btnSendToExtension";
             this.btnSendToExtension.Size = new System.Drawing.Size(442, 41);
             this.btnSendToExtension.TabIndex = 4;
             this.btnSendToExtension.Text = "Send to Extension";
             this.btnSendToExtension.UseVisualStyleBackColor = true;
             this.btnSendToExtension.Click += new System.EventHandler(this.btnSendToExtension_Click);
+            // 
+            // pageTroubleshooter
+            // 
+            this.pageTroubleshooter.Controls.Add(this.rtbTroubleshoot);
+            this.pageTroubleshooter.Location = new System.Drawing.Point(4, 4);
+            this.pageTroubleshooter.Name = "pageTroubleshooter";
+            this.pageTroubleshooter.Size = new System.Drawing.Size(1471, 823);
+            this.pageTroubleshooter.TabIndex = 4;
+            this.pageTroubleshooter.Text = "Troubleshooter";
+            this.pageTroubleshooter.UseVisualStyleBackColor = true;
+            // 
+            // rtbTroubleshoot
+            // 
+            this.rtbTroubleshoot.BackColor = System.Drawing.SystemColors.WindowText;
+            this.rtbTroubleshoot.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            this.rtbTroubleshoot.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.rtbTroubleshoot.Font = new System.Drawing.Font("Consolas", 9.857143F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.rtbTroubleshoot.ForeColor = System.Drawing.SystemColors.Window;
+            this.rtbTroubleshoot.Location = new System.Drawing.Point(0, 0);
+            this.rtbTroubleshoot.Name = "rtbTroubleshoot";
+            this.rtbTroubleshoot.ReadOnly = true;
+            this.rtbTroubleshoot.Size = new System.Drawing.Size(1471, 829);
+            this.rtbTroubleshoot.TabIndex = 4;
+            this.rtbTroubleshoot.Text = "";
+            this.rtbTroubleshoot.WordWrap = false;
             // 
             // pageAbout
             // 
@@ -418,13 +444,13 @@ namespace nmf_view
             this.lvHosts.Dock = System.Windows.Forms.DockStyle.Fill;
             this.lvHosts.FullRowSelect = true;
             this.lvHosts.GridLines = true;
-            listViewGroup3.Header = "User-Registered (HKCU)";
-            listViewGroup3.Name = "lvgHKCU";
-            listViewGroup4.Header = "System-Registered (HKLM)";
-            listViewGroup4.Name = "lvgHKLM";
+            listViewGroup1.Header = "User-Registered (HKCU)";
+            listViewGroup1.Name = "lvgHKCU";
+            listViewGroup2.Header = "System-Registered (HKLM)";
+            listViewGroup2.Name = "lvgHKLM";
             this.lvHosts.Groups.AddRange(new System.Windows.Forms.ListViewGroup[] {
-            listViewGroup3,
-            listViewGroup4});
+            listViewGroup1,
+            listViewGroup2});
             this.lvHosts.HideSelection = false;
             this.lvHosts.Location = new System.Drawing.Point(3, 104);
             this.lvHosts.Name = "lvHosts";
@@ -471,31 +497,6 @@ namespace nmf_view
             // 
             this.chExtensions.Text = "Extensions";
             // 
-            // pageTroubleshooter
-            // 
-            this.pageTroubleshooter.Controls.Add(this.rtbTroubleshoot);
-            this.pageTroubleshooter.Location = new System.Drawing.Point(4, 4);
-            this.pageTroubleshooter.Name = "pageTroubleshooter";
-            this.pageTroubleshooter.Size = new System.Drawing.Size(1471, 823);
-            this.pageTroubleshooter.TabIndex = 4;
-            this.pageTroubleshooter.Text = "Troubleshooter";
-            this.pageTroubleshooter.UseVisualStyleBackColor = true;
-            // 
-            // rtbTroubleshoot
-            // 
-            this.rtbTroubleshoot.BackColor = System.Drawing.SystemColors.WindowText;
-            this.rtbTroubleshoot.BorderStyle = System.Windows.Forms.BorderStyle.None;
-            this.rtbTroubleshoot.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.rtbTroubleshoot.Font = new System.Drawing.Font("Consolas", 9.857143F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.rtbTroubleshoot.ForeColor = System.Drawing.SystemColors.Window;
-            this.rtbTroubleshoot.Location = new System.Drawing.Point(0, 0);
-            this.rtbTroubleshoot.Name = "rtbTroubleshoot";
-            this.rtbTroubleshoot.ReadOnly = true;
-            this.rtbTroubleshoot.Size = new System.Drawing.Size(1471, 823);
-            this.rtbTroubleshoot.TabIndex = 4;
-            this.rtbTroubleshoot.Text = "";
-            this.rtbTroubleshoot.WordWrap = false;
-            // 
             // frmMain
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(12F, 30F);
@@ -504,12 +505,14 @@ namespace nmf_view
             this.Controls.Add(this.tcApp);
             this.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
+            this.KeyPreview = true;
             this.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.MinimumSize = new System.Drawing.Size(830, 350);
             this.Name = "frmMain";
             this.Text = "NativeMessaging Meddler";
             this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.frmMain_FormClosed);
             this.Load += new System.EventHandler(this.frmMain_Load);
+            this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.frmMain_KeyDown);
             this.tcApp.ResumeLayout(false);
             this.pageMonitor.ResumeLayout(false);
             this.pnlTop.ResumeLayout(false);
@@ -526,9 +529,9 @@ namespace nmf_view
             this.scInjector.Panel2.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.scInjector)).EndInit();
             this.scInjector.ResumeLayout(false);
+            this.pageTroubleshooter.ResumeLayout(false);
             this.pageAbout.ResumeLayout(false);
             this.pageAbout.PerformLayout();
-            this.pageTroubleshooter.ResumeLayout(false);
             this.ResumeLayout(false);
 
         }

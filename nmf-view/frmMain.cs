@@ -39,8 +39,8 @@ namespace nmf_view
         }
 
         static app_state oSettings;
+        static List<RegisteredHosts.HostEntry> listHosts;
         static readonly HttpClient client = new HttpClient();
-
         private StreamWriter swLogfile = null;
 
         private static async Task WriteToApp(string sMessage)
@@ -82,7 +82,8 @@ namespace nmf_view
             catch { }
         }
 
-        public bool IsAppAttached() {
+        public bool IsAppAttached()
+        {
             return (oSettings.strmToApp != null);
         }
 
@@ -110,7 +111,6 @@ namespace nmf_view
             if (null != oSettings.strmToApp) oSettings.strmToApp.Close();
             if (null != oSettings.strmFromApp) oSettings.strmFromApp.Close();
             toolTip1.SetToolTip(pbApp, "Disconnected");
-            //if (oSettings.bPropagateClosures && null != oSettings.strmApp) oSettings.strmExt.Close();
         }
 
         private void detachExtension()
@@ -119,7 +119,6 @@ namespace nmf_view
             markExtensionDetached();
             if (null != oSettings.strmToExt) oSettings.strmToExt.Close();
             if (null != oSettings.strmFromExt) oSettings.strmFromExt.Close();
-            //if (oSettings.bPropagateClosures && null != oSettings.strmApp) oSettings.strmExt.Close();
         }
         private async Task MessageShufflerForExtension()
         {
@@ -171,10 +170,10 @@ namespace nmf_view
                 {
                     try
                     {
-                        // TODO: Should we POST the byte array instead?
-                        StringContent body = new StringContent(sMessage, Encoding.UTF8, "application/json");
+                        HttpContent entity = new ByteArrayContent(buffer);
+                        entity.Headers.Add("Content-Type", "application/json; charset=utf-8");
 
-                        HttpResponseMessage response = await client.PostAsync($"{sFiddlerPrefix}/ExtToApp/{oSettings.sExtensionID ?? "noID"}/{oSettings.sExeName}", body);
+                        HttpResponseMessage response = await client.PostAsync($"{sFiddlerPrefix}/ExtToApp/{oSettings.sExtensionID ?? "noID"}/{oSettings.sExeName}", entity);
                         if (response.IsSuccessStatusCode)
                         {
                             string sNewBody = await response.Content.ReadAsStringAsync();
@@ -190,7 +189,7 @@ namespace nmf_view
                     }
                 }
                 if (oSettings.bReflectToExtension &&
-                    (sMessage.Length < (1024*1024)))    // Don't reflect messages over 1mb. They're illegal!
+                    (sMessage.Length < (1024 * 1024)))    // Don't reflect messages over 1mb. They're illegal!
                 {
                     await WriteToExtension(sMessage);
                 }
@@ -226,14 +225,15 @@ namespace nmf_view
                 if (cbBodyPromised == 0)
                 {
                     log("Got an empty (size==0) message. Is that legal?? Disconnecting.");
-                    markExtensionDetached();
+                    markAppDetached();
                     return;
                 }
 
-                if (cbBodyPromised > 1024*1024)
+                if (cbBodyPromised > 1024 * 1024)
                 {
                     log($"Illegal message size from the NativeMessaging App. Messages are limited to 1mb but this app wants to send {cbBodyPromised:N0} bytes.");
-                    // TODO: Skip it? Detach?
+                    markAppDetached();
+                    return;
                 }
 
                 byte[] buffer = new byte[cbBodyPromised];
@@ -258,9 +258,10 @@ namespace nmf_view
                 {
                     try
                     {
-                        StringContent body = new StringContent(sMessage, Encoding.UTF8, "application/json");
+                        HttpContent entity = new ByteArrayContent(buffer);
+                        entity.Headers.Add("Content-Type", "application/json; charset=utf-8");
 
-                        HttpResponseMessage response = await client.PostAsync($"{sFiddlerPrefix}/AppToExt/{oSettings.sExeName}/{oSettings.sExtensionID ?? "noID"}", body);
+                        HttpResponseMessage response = await client.PostAsync($"{sFiddlerPrefix}/AppToExt/{oSettings.sExeName}/{oSettings.sExtensionID ?? "noID"}", entity);
                         if (response.IsSuccessStatusCode)
                         {
                             string sNewBody = await response.Content.ReadAsStringAsync();
@@ -321,7 +322,7 @@ namespace nmf_view
         private void frmMain_Load(object sender, EventArgs e)
         {
             lblVersion.Text = $"v{Application.ProductVersion} [{((8 == IntPtr.Size) ? "64" : "32")}-bit]";
-            this.Text += $" [pid:{Process.GetCurrentProcess().Id}{(Utilities.IsUserAnAdmin()?" Elevated":String.Empty)}]";
+            this.Text += $" [pid:{Process.GetCurrentProcess().Id}{(Utilities.IsUserAnAdmin() ? " Elevated" : String.Empty)}]";
             //https://source.chromium.org/chromium/chromium/src/+/main:chrome/test/data/native_messaging/native_hosts/echo.py;l=30?q=parent-window&sq=&ss=chromium
 
             var arrArgs = Environment.GetCommandLineArgs();
@@ -357,7 +358,7 @@ namespace nmf_view
             clbOptions.SetItemChecked(2, true);
             clbOptions.SetItemChecked(3, true);
 
-            //if (oSettings.sExtensionID != "unknown") ConnectApp();
+            if (oSettings.sExtensionID != "unknown") ConnectMostLikelyApp();
             WaitForMessages();
         }
 
@@ -382,7 +383,8 @@ namespace nmf_view
             if (e.Index == 1) { oSettings.bSendToFiddler = (e.NewValue == CheckState.Checked); return; }
             if (e.Index == 2) { oSettings.bPropagateClosures = (e.NewValue == CheckState.Checked); return; }
             if (e.Index == 3) { oSettings.bLogMessageBodies = (e.NewValue == CheckState.Checked); return; }
-            if (e.Index == 4) {
+            if (e.Index == 4)
+            {
                 oSettings.bLogToDesktop = (e.NewValue == CheckState.Checked);
                 if (oSettings.bLogToDesktop)
                 {
@@ -392,36 +394,79 @@ namespace nmf_view
                 {
                     CloseLogfile();
                 }
-                return; 
+                return;
             }
         }
 
         private void pbApp_Click(object sender, EventArgs e)
         {
-            if (!IsAppAttached()) ConnectApp();
+            if (!IsAppAttached()) ConnectApp(Application.ExecutablePath);
         }
 
-        private void ConnectApp()
+        private bool ConnectMostLikelyApp()
+        {
+            listHosts = RegisteredHosts.GetAllHosts();
+
+            // @"C:\program files\windows security\browserCore\browserCore.exe";
+            if (String.IsNullOrEmpty(oSettings.sExtensionID) ||
+                null == listHosts)
+            {
+                return false;
+            }
+
+            foreach (var host in listHosts)
+            {
+                if (host.AllowedExtensions.IndexOf(oSettings.sExtensionID, StringComparison.OrdinalIgnoreCase)>-1)
+                {
+                    string sCommand = Path.GetFileName(host.Command);
+                    if (!Path.IsPathRooted(sCommand))
+                    {
+                        sCommand = Path.GetDirectoryName(host.ManifestFilename) + sCommand;
+                    }
+                    log($"Invocation by {oSettings.sExtensionID} suggests we should launch {sCommand}");
+
+                    if (String.Equals(sCommand, Application.ExecutablePath, StringComparison.OrdinalIgnoreCase))
+                    {
+                        log($"...but that would create an infinite loop, bailing out here.");
+                        return false;
+                    }
+                    return ConnectApp(sCommand);
+                }
+            }
+
+            log ($"Did not find any likely nativeHost for {oSettings.sExtensionID}");
+            return false;
+        }
+
+        private bool ConnectApp(string sFilename)
         {
             // https://source.chromium.org/chromium/chromium/src/+/main:chrome/browser/extensions/api/messaging/native_process_launcher_win.cc;bpv=1;bpt=1
 
             using (Process myProcess = new Process())
             {
-                myProcess.StartInfo.FileName = /*Application.ExecutablePath;//  */ @"C:\program files\windows security\browserCore\browserCore.exe";
+                myProcess.StartInfo.FileName = sFilename;
                 myProcess.StartInfo.Arguments = $"chrome-extension://{oSettings.sExtensionID} --parent-window={oSettings.iParentWindow}"; // TODO: Parent window
                 myProcess.StartInfo.UseShellExecute = false;
                 myProcess.StartInfo.WorkingDirectory = Path.GetDirectoryName(myProcess.StartInfo.FileName);
 
-                // Hide by default; TODO: allow showing https://source.chromium.org/chromium/chromium/src/+/main:base/process/launch_win.cc;l=298;drc=1ad438dde6b39e1c0d04b8f8cb27c1a14ba6f90e
+                // Hide by default
+                // TODO: allow showing https://source.chromium.org/chromium/chromium/src/+/main:base/process/launch_win.cc;l=298;drc=1ad438dde6b39e1c0d04b8f8cb27c1a14ba6f90e
                 myProcess.StartInfo.CreateNoWindow = true;
                 myProcess.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;  // Does this do anything?
 
                 myProcess.StartInfo.RedirectStandardInput = true;
                 myProcess.StartInfo.RedirectStandardOutput = true;
-                // TODO: STDERR
+                // TODO: STDERR?
 
-                //todo: catch errors.
-                myProcess.Start();
+                try
+                {
+                    myProcess.Start();
+                }
+                catch (Exception eX)
+                {
+                    log($"Invoking '{myProcess.StartInfo.FileName}' failed. {eX.Message}");
+                    return false;
+                }
 
                 pbApp.BackColor = Color.FromArgb(159, 255, 159);
                 toolTip1.SetToolTip(pbApp, $"#{myProcess.Id} - {myProcess.StartInfo.FileName}\nDouble-click to disconnect.");
@@ -432,6 +477,7 @@ namespace nmf_view
                 oSettings.strmToApp = myProcess.StandardInput.BaseStream;
                 oSettings.strmFromApp = myProcess.StandardOutput.BaseStream;
                 Task.Run(async () => await MessageShufflerForApp());
+                return true;
             }
         }
 
@@ -465,10 +511,12 @@ namespace nmf_view
             if (tcApp.SelectedTab == pageRegisteredHosts)
             {
                 PopulateHosts();
-            }else
-                if (tcApp.SelectedTab == pageTroubleshooter)
+                return;
+            }
+            if (tcApp.SelectedTab == pageTroubleshooter)
             {
                 PopulateTroubleshooter();
+                return;
             }
         }
 
@@ -502,7 +550,7 @@ namespace nmf_view
         {
             try
             {
-                rtbTroubleshoot.AppendText("Chromium uses named pipes to write data into stdio for the NativeMessaging host application.\r\n\r\n" 
+                rtbTroubleshoot.AppendText("Chromium uses named pipes to write data into stdio for the NativeMessaging host application.\r\n\r\n"
                                          + "Currently active NativeMessaging named pipes:\r\n\r\n");
                 foreach (var sPipe in EnumPipes(".nativeMessaging."))
                 {
@@ -521,7 +569,7 @@ namespace nmf_view
             rtbTroubleshoot.AppendText("=======================\r\n");
 
             string sComSpec = Environment.GetEnvironmentVariable("COMSPEC");
-            if (sComSpec.IndexOf("cmd.exe", StringComparison.OrdinalIgnoreCase)<1)
+            if (sComSpec.IndexOf("cmd.exe", StringComparison.OrdinalIgnoreCase) < 1)
             {
                 rtbTroubleshoot.AppendText($"FATAL: Non-cmd.exe COMSPEC value will not work; {sComSpec}");
             }
@@ -531,17 +579,17 @@ namespace nmf_view
             {
                 rtbTroubleshoot.AppendText($"FATAL: cmd.exe is disabled by DisableCMD policy. NativeMessaging will not work.\r\n");
             }
-        // todo: more troubleshooters
-        //
-        // https://bugs.chromium.org/p/chromium/issues/detail?id=416474&q=%22parent-window%22%20%22Native%20Messaging%20Host%22&can=1
-        //   ^ or & in path
-        //    https://bugs.chromium.org/p/chromium/issues/detail?id=335558&q=%22parent-window%22%20%22Native%20Messaging%20Host%22&can=1
+            // todo: more troubleshooters
+            //
+            // https://bugs.chromium.org/p/chromium/issues/detail?id=416474&q=%22parent-window%22%20%22Native%20Messaging%20Host%22&can=1
+            //   ^ or & in path
+            //    https://bugs.chromium.org/p/chromium/issues/detail?id=335558&q=%22parent-window%22%20%22Native%20Messaging%20Host%22&can=1
         }
 
         private void PopulateHosts()
         {
             lvHosts.Items.Clear();
-            List<RegisteredHosts.HostEntry> listHosts = RegisteredHosts.GetAllHosts();
+            listHosts = RegisteredHosts.GetAllHosts();
             if (!Utilities.IsUserAnAdmin()) lvHosts.Groups[1].Header = "System-Registered (HKLM); you must run this program as Admin to edit these.";
             foreach (RegisteredHosts.HostEntry oHE in listHosts)
             {
@@ -604,7 +652,7 @@ namespace nmf_view
 
         private void lvHosts_MouseDoubleClick(object sender, MouseEventArgs e)
         {
-            if ((Control.ModifierKeys == Keys.Alt) && (lvHosts.SelectedItems.Count==1))
+            if ((Control.ModifierKeys == Keys.Alt) && (lvHosts.SelectedItems.Count == 1))
             {
                 ListViewItem oLVI = lvHosts.SelectedItems[0];
                 RegisteredHosts.HostEntry oHE = (RegisteredHosts.HostEntry)oLVI.Tag;
@@ -639,6 +687,34 @@ namespace nmf_view
         {
             txtSendToApp.Text = txtSendToApp.Text.Trim();
             WriteToExtension(txtSendToExtension.Text);
+        }
+
+        private void txtLog_KeyDown(object sender, KeyEventArgs e)
+        {
+            if ((e.Modifiers == Keys.Control) && e.KeyCode == Keys.X)
+            {
+                e.SuppressKeyPress = true;
+                txtLog.Clear();
+                return;
+            }
+        }
+
+        private void frmMain_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.F5)
+            {
+                e.SuppressKeyPress = e.Handled = true;
+                if (tcApp.SelectedTab == pageRegisteredHosts)
+                {
+                    PopulateHosts();
+                    return;
+                }
+                if (tcApp.SelectedTab == pageTroubleshooter)
+                {
+                    PopulateTroubleshooter();
+                    return;
+                }
+            }
         }
     }
 }

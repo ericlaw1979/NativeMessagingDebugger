@@ -117,11 +117,13 @@ namespace nmf_view
                 if (String.IsNullOrEmpty(oHE.ManifestFilename))
                 {
                     oHE.Description = "ERROR: No manifest PATH specified in registry.";
+                    oHE.AllowedExtensions = oHE.Command = String.Empty;
                     return;
                 }
                 if (!File.Exists(oHE.ManifestFilename)) 
                 {
                     oHE.Description = "ERROR: Specified manifest PATH does not exist.";
+                    oHE.AllowedExtensions = oHE.Command = String.Empty;
                     return;
                 }
 
@@ -137,8 +139,8 @@ namespace nmf_view
                     return;
                 }
                 // assert oHE.Name == htManifest["name"] as string;
-                oHE.Description = htManifest["description"] as string;
-                oHE.Command = htManifest["path"] as string;
+                oHE.Description = htManifest["description"] as string ?? String.Empty;
+                oHE.Command = htManifest["path"] as string ?? String.Empty;
 
                 // TODO: Check PATH (after full-qualification) filename for special characters that cause problems.
 
@@ -148,6 +150,10 @@ namespace nmf_view
                 if (alAllowedOrigins != null)
                 {
                     oHE.AllowedExtensions = string.Join(";", alAllowedOrigins.ToArray().Select(s => (s as String).Trim().TrimEnd('/').Replace("chrome-extension://", String.Empty)));
+                }
+                else
+                {
+                    oHE.AllowedExtensions = String.Empty; // TODO: Mark BAD
                 }
 
             }
