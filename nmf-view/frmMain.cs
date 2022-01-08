@@ -94,32 +94,43 @@ namespace nmf_view
 
         private void markExtensionDetached()
         {
-            pbExt.BackColor = Color.DarkGray;
-            toolTip1.SetToolTip(pbExt, $"Was connected to {oSettings.sExtensionID}.\nDisconnected");
-            if (oSettings.bPropagateClosures) detachApp();
+            this.BeginInvoke((MethodInvoker)delegate
+            {
+                pbExt.BackColor = Color.DarkGray;
+                toolTip1.SetToolTip(pbExt, $"Was connected to {oSettings.sExtensionID}.\nDisconnected");
+            });
         }
+
         private void markAppDetached()
         {
-            pbApp.BackColor = Color.DarkGray;
-            toolTip1.SetToolTip(pbApp, $"Was connected to {oSettings.sExeName}.\nDisconnected");
-            if (oSettings.bPropagateClosures) detachExtension();
+            this.BeginInvoke((MethodInvoker)delegate
+            {
+                pbApp.BackColor = Color.DarkGray;
+                toolTip1.SetToolTip(pbApp, $"Was connected to {oSettings.sExeName}.\nDisconnected");
+            });
+        }
+        private void detachExtension()
+        {
+            if (!IsExtensionAttached()) return;
+            log("Detaching Extension pipes...");
+            if (null != oSettings.strmToExt) { oSettings.strmToExt.Close(); oSettings.strmToExt = null; }
+            if (null != oSettings.strmFromExt) { oSettings.strmFromExt.Close(); oSettings.strmFromExt = null; }
+            markExtensionDetached();
+            if (oSettings.bPropagateClosures) detachApp();
         }
         private void detachApp()
         {
-            if (IsAppAttached()) log("Detaching App pipes.");
-            pbApp.BackColor = Color.DarkGray;
-            if (null != oSettings.strmToApp) oSettings.strmToApp.Close();
-            if (null != oSettings.strmFromApp) oSettings.strmFromApp.Close();
-            toolTip1.SetToolTip(pbApp, "Disconnected");
+            if (!IsAppAttached()) return;
+            log("Detaching App pipes.");
+            if (null != oSettings.strmToApp) { oSettings.strmToApp.Close(); oSettings.strmToApp = null; }
+            if (null != oSettings.strmFromApp) { oSettings.strmFromApp.Close(); oSettings.strmFromApp = null; }
+            markAppDetached();
+            if (oSettings.bPropagateClosures) detachExtension();
         }
 
-        private void detachExtension()
-        {
-            if (IsExtensionAttached()) log("Detaching Extension pipes.");
-            markExtensionDetached();
-            if (null != oSettings.strmToExt) oSettings.strmToExt.Close();
-            if (null != oSettings.strmFromExt) oSettings.strmFromExt.Close();
-        }
+        /// <summary>
+        /// This function sits around waiting for messages from the browser extension.
+        /// </summary>
         private async Task MessageShufflerForExtension()
         {
             byte[] arrLenBytes = new byte[4];
@@ -133,7 +144,7 @@ namespace nmf_view
                     if (cbThisRead < 1)
                     {
                         log($"Got EOF while trying to read message size from (Extension); got only {cbSizeRead} bytes. Disconnecting.");
-                        markExtensionDetached();
+                        detachExtension();
                         return;
                     }
                     MaybeWriteBytesToLogfile("ReadSizeFromExt-RawRead: ", arrLenBytes, cbSizeRead, cbThisRead);
@@ -145,7 +156,7 @@ namespace nmf_view
                 if (cbBodyPromised == 0)
                 {
                     log("Got an empty (size==0) message. Is that legal?? Disconnecting.");
-                    markExtensionDetached();
+                    detachExtension();
                     return;
                 }
 
@@ -158,7 +169,7 @@ namespace nmf_view
                     if (cbThisRead < 1)
                     {
                         log($"Got EOF while reading message data from (Extension); got only {cbBodyRead} bytes. Disconnecting.");
-                        markExtensionDetached();
+                        detachExtension();
                     }
                     MaybeWriteBytesToLogfile("ReadBodyFromExt-RawRead: ", buffer, cbBodyRead, cbThisRead);
                     cbBodyRead += cbThisRead;
@@ -200,6 +211,9 @@ namespace nmf_view
             }
         }
 
+        /// <summary>
+        /// This function sits around waiting for messages from the native host app.
+        /// </summary>
         private async Task MessageShufflerForApp()
         {
             byte[] arrLenBytes = new byte[4];
@@ -213,7 +227,7 @@ namespace nmf_view
                     if (cbThisRead < 1)
                     {
                         log($"Got EOF while trying to read message size from (App); got only {cbSizeRead} bytes. Disconnecting.");
-                        markAppDetached();
+                        detachApp();
                         return;
                     }
                     MaybeWriteBytesToLogfile("ReadSizeFromApp-RawRead: ", arrLenBytes, cbSizeRead, cbThisRead);
@@ -225,14 +239,14 @@ namespace nmf_view
                 if (cbBodyPromised == 0)
                 {
                     log("Got an empty (size==0) message. Is that legal?? Disconnecting.");
-                    markAppDetached();
+                    detachApp();
                     return;
                 }
 
                 if (cbBodyPromised > 1024 * 1024)
                 {
                     log($"Illegal message size from the NativeMessaging App. Messages are limited to 1mb but this app wants to send {cbBodyPromised:N0} bytes.");
-                    markAppDetached();
+                    detachApp();
                     return;
                 }
 
@@ -245,7 +259,7 @@ namespace nmf_view
                     if (cbThisRead < 1)
                     {
                         log($"Got EOF while reading message data from (App); got only {cbBodyRead} bytes. Disconnecting.");
-                        markAppDetached();
+                        detachApp();
                     }
                     MaybeWriteBytesToLogfile("ReadBodyFromApp-RawRead: ", buffer, cbBodyRead, cbThisRead);
                     cbBodyRead += cbThisRead;
@@ -400,11 +414,31 @@ namespace nmf_view
 
         private void pbApp_Click(object sender, EventArgs e)
         {
-            if (!IsAppAttached()) ConnectApp(Application.ExecutablePath);
+            if (IsAppAttached()) return;
+
+            if (!ConnectMostLikelyApp())
+            {
+                ConnectApp(Application.ExecutablePath);
+            }
         }
 
         private bool ConnectMostLikelyApp()
         {
+            // If we are RealHost.proxy.exe, then see whether RealHost.exe exists, and if so, use that.
+            string sCurrentExe = Application.ExecutablePath;
+            if (sCurrentExe.IndexOf("proxy.", StringComparison.OrdinalIgnoreCase) > -1)
+            {
+                string sCandidate = sCurrentExe.Replace(".proxy", string.Empty);
+                log($"Checking for {sCandidate}...");
+                if (File.Exists(sCandidate))
+                {
+                    return ConnectApp(sCandidate);
+                }
+            }
+
+            /*
+             * I'm not sure what I was thinking when I wrote this; it seems almost guaranteed to just
+             * find this proxy.
             listHosts = RegisteredHosts.GetAllHosts();
 
             // @"C:\program files\windows security\browserCore\browserCore.exe";
@@ -433,7 +467,7 @@ namespace nmf_view
                     return ConnectApp(sCommand);
                 }
             }
-
+            */
             log ($"Did not find any likely nativeHost for {oSettings.sExtensionID}");
             return false;
         }
@@ -476,6 +510,7 @@ namespace nmf_view
                 // https://docs.microsoft.com/en-us/dotnet/api/system.console?view=net-5.0#Streams
                 oSettings.strmToApp = myProcess.StandardInput.BaseStream;
                 oSettings.strmFromApp = myProcess.StandardOutput.BaseStream;
+                log($"Started {oSettings.sExeName} as the proxied NativeMessagingHost.");
                 Task.Run(async () => await MessageShufflerForApp());
                 return true;
             }
@@ -517,6 +552,11 @@ namespace nmf_view
             {
                 PopulateTroubleshooter();
                 return;
+            }
+            if (tcApp.SelectedTab == pageInjector)
+            {
+                btnSendToApp.Enabled = ((txtSendToApp.TextLength > 0) && IsAppAttached());
+                btnSendToExtension.Enabled = ((txtSendToExtension.TextLength > 0) && IsExtensionAttached());
             }
         }
 
@@ -677,16 +717,18 @@ namespace nmf_view
             btnSendToExtension.Enabled = ((txtSendToExtension.TextLength > 0) && IsExtensionAttached());
         }
 
-        private void btnSendToApp_Click(object sender, EventArgs e)
+        private async void btnSendToApp_Click(object sender, EventArgs e)
         {
             txtSendToApp.Text = txtSendToApp.Text.Trim();
-            WriteToApp(txtSendToApp.Text);
+            log($"Injecting message to app '{txtSendToApp.Text}'");
+            await WriteToApp(txtSendToApp.Text);
         }
 
-        private void btnSendToExtension_Click(object sender, EventArgs e)
+        private async void btnSendToExtension_Click(object sender, EventArgs e)
         {
-            txtSendToApp.Text = txtSendToApp.Text.Trim();
-            WriteToExtension(txtSendToExtension.Text);
+            txtSendToExtension.Text = txtSendToExtension.Text.Trim();
+            log($"Injecting message to extension '{txtSendToExtension.Text}'");
+            await WriteToExtension(txtSendToExtension.Text);
         }
 
         private void txtLog_KeyDown(object sender, KeyEventArgs e)

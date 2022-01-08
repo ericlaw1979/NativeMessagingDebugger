@@ -40,7 +40,7 @@ namespace nmf_view
             }
         };
 
-        // TODO: Mozilla?
+        // TODO: Add support for Mozilla
         // HKEY_CURRENT_USER\Software\Mozilla\NativeMessagingHosts\ping_pong
         // HKEY_LOCAL_MACHINE\Software\Mozilla\NativeMessagingHosts\ping_pong
 
@@ -130,8 +130,7 @@ namespace nmf_view
                 // TODO: Check Manifest filename for special characters that cause problems.
 
                 string sJSON = File.ReadAllText(oHE.ManifestFilename, Encoding.UTF8);
-                JSON.JSONParseErrors oErrors;
-                if (!(JSON.JsonDecode(sJSON, out oErrors) is Hashtable htManifest))
+                if (!(JSON.JsonDecode(sJSON, out JSON.JSONParseErrors oErrors) is Hashtable htManifest))
                 {
                     oHE.Description = $"ERROR: Manifest Parsing failed at offset {oErrors.iErrorIndex} {oErrors.sWarningText}.";
                     oHE.Command = "???";
