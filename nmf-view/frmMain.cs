@@ -190,6 +190,7 @@ namespace nmf_view
                             string sNewBody = await response.Content.ReadAsStringAsync();
                             if (!sNewBody.Contains("Fiddler Echo"))
                             {
+                                log("Replacing message body with overridden text from Fiddler.");
                                 sMessage = sNewBody;
                             }
                         }
@@ -199,11 +200,13 @@ namespace nmf_view
                         log($"Call to Fiddler failed: {e.Message}");
                     }
                 }
+
                 if (oSettings.bReflectToExtension &&
                     (sMessage.Length < (1024 * 1024)))    // Don't reflect messages over 1mb. They're illegal!
                 {
                     await WriteToExtension(sMessage);
                 }
+
                 if (null != oSettings.strmToApp)
                 {
                     await WriteToApp(sMessage);
@@ -281,6 +284,7 @@ namespace nmf_view
                             string sNewBody = await response.Content.ReadAsStringAsync();
                             if (!sNewBody.Contains("Fiddler Echo"))
                             {
+                                log("Replacing message body with overridden text from Fiddler.");
                                 sMessage = sNewBody;
                             }
                         }
@@ -290,6 +294,7 @@ namespace nmf_view
                         log($"Call to Fiddler failed: {e.Message}");
                     }
                 }
+
                 if (null != oSettings.strmToExt)
                 {
                     await WriteToExtension(sMessage);
@@ -352,6 +357,10 @@ namespace nmf_view
                   );
                 tcApp.SelectedTab = pageAbout;
             }
+            else
+            {
+                log($"extension: {oSettings.sExtensionID}");
+            }
             if (arrArgs.Length > 2)
             {
                 // The parent-window value is only non-zero when the calling context is not a background script.
@@ -368,9 +377,11 @@ namespace nmf_view
             toolTip1.SetToolTip(pbApp, $"Click to set the ClientHandler to another instance of this app.");
             log("Listening for messages...");
 
-            // clbOptions.SetItemChecked(1, true); Fiddler
-            clbOptions.SetItemChecked(2, true);
-            clbOptions.SetItemChecked(3, true);
+            clbOptions.SetItemChecked(2, true); // Propagate closures
+            clbOptions.SetItemChecked(3, true); // Record bodies
+            string sCurrentExe = Application.ExecutablePath;
+            if (sCurrentExe.Contains(".fiddler.")) clbOptions.SetItemChecked(1, true);
+            if (sCurrentExe.Contains(".log.")) clbOptions.SetItemChecked(4, true);
 
             if (oSettings.sExtensionID != "unknown") ConnectMostLikelyApp();
             WaitForMessages();
@@ -425,8 +436,9 @@ namespace nmf_view
         private bool ConnectMostLikelyApp()
         {
             // If we are RealHost.proxy.exe, then see whether RealHost.exe exists, and if so, use that.
-            string sCurrentExe = Application.ExecutablePath;
-            if (sCurrentExe.IndexOf("proxy.", StringComparison.OrdinalIgnoreCase) > -1)
+            // Remove any option flags in the command line.
+            string sCurrentExe = Application.ExecutablePath.Replace(".log", string.Empty).Replace(".fiddler", string.Empty);
+            if (sCurrentExe.Contains(".proxy"))
             {
                 string sCandidate = sCurrentExe.Replace(".proxy", string.Empty);
                 log($"Checking for {sCandidate}...");
@@ -688,16 +700,28 @@ namespace nmf_view
                 (sender as HostListView).SelectAll();
                 return;
             }
+            if ((e.Modifiers == Keys.Alt) && e.KeyCode == Keys.Enter)
+            {
+                e.SuppressKeyPress = true;
+                ShowSelectedManifestInExplorer();
+                return;
+            }
         }
 
         private void lvHosts_MouseDoubleClick(object sender, MouseEventArgs e)
         {
             if ((Control.ModifierKeys == Keys.Alt) && (lvHosts.SelectedItems.Count == 1))
             {
-                ListViewItem oLVI = lvHosts.SelectedItems[0];
-                RegisteredHosts.HostEntry oHE = (RegisteredHosts.HostEntry)oLVI.Tag;
-                Utilities.OpenRegeditTo(oHE.RegistryKeyPath);
+                ShowSelectedManifestInExplorer();
             }
+        }
+
+        private void ShowSelectedManifestInExplorer()
+        {
+            ListViewItem oLVI = lvHosts.SelectedItems[0];
+            RegisteredHosts.HostEntry oHE = (RegisteredHosts.HostEntry)oLVI.Tag;
+            Utilities.OpenExplorerTo(oHE.ManifestFilename);
+            // Utilities.OpenRegeditTo(oHE.RegistryKeyPath);
         }
 
         private void frmMain_FormClosed(object sender, FormClosedEventArgs e)

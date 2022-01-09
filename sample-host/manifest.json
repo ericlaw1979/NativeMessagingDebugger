@@ -1,13 +1,9 @@
 {
   "name": "com.bayden.nmf.demo",
-  "hack_name": "com.microsoft.browsercore",
   "description": "NativeMessaging Meddler Demo Extension",
   "path": "c:\\src\\nm\\nmf-view\\bin\\release\\RealNMHostApp.proxy.exe",
   "type": "stdio",
   "allowed_origins": [
-    "chrome-extension://aalonnpchfmkpopkohiccmghgkipcjcb/",
-    "chrome-extension://ppnbnpeolgkicgegkbkbjmhlideopiji/",
-    "chrome-extension://ndjpnladcallmjemlbaebfadecfhkepb/",
-    "chrome-extension://gggmmkjegpiggikcnhidnjjhmicpibll/"
+    "chrome-extension://aalonnpchfmkpopkohiccmghgkipcjcb/"
   ]
 }

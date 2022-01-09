@@ -32,8 +32,8 @@ namespace nmf_view
             this.components = new System.ComponentModel.Container();
             System.Windows.Forms.ColumnHeader chManifest;
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(frmMain));
-            System.Windows.Forms.ListViewGroup listViewGroup5 = new System.Windows.Forms.ListViewGroup("User-Registered (HKCU)", System.Windows.Forms.HorizontalAlignment.Left);
-            System.Windows.Forms.ListViewGroup listViewGroup6 = new System.Windows.Forms.ListViewGroup("System-Registered (HKLM)", System.Windows.Forms.HorizontalAlignment.Left);
+            System.Windows.Forms.ListViewGroup listViewGroup1 = new System.Windows.Forms.ListViewGroup("User-Registered (HKCU)", System.Windows.Forms.HorizontalAlignment.Left);
+            System.Windows.Forms.ListViewGroup listViewGroup2 = new System.Windows.Forms.ListViewGroup("System-Registered (HKLM)", System.Windows.Forms.HorizontalAlignment.Left);
             this.tcApp = new System.Windows.Forms.TabControl();
             this.pageMonitor = new System.Windows.Forms.TabPage();
             this.txtLog = new System.Windows.Forms.RichTextBox();
@@ -87,7 +87,7 @@ namespace nmf_view
             // 
             // chManifest
             // 
-            chManifest.Text = "App";
+            chManifest.Text = "Manifest";
             chManifest.Width = 120;
             // 
             // tcApp
@@ -234,13 +234,13 @@ namespace nmf_view
             this.lvHosts.Dock = System.Windows.Forms.DockStyle.Fill;
             this.lvHosts.FullRowSelect = true;
             this.lvHosts.GridLines = true;
-            listViewGroup5.Header = "User-Registered (HKCU)";
-            listViewGroup5.Name = "lvgHKCU";
-            listViewGroup6.Header = "System-Registered (HKLM)";
-            listViewGroup6.Name = "lvgHKLM";
+            listViewGroup1.Header = "User-Registered (HKCU)";
+            listViewGroup1.Name = "lvgHKCU";
+            listViewGroup2.Header = "System-Registered (HKLM)";
+            listViewGroup2.Name = "lvgHKLM";
             this.lvHosts.Groups.AddRange(new System.Windows.Forms.ListViewGroup[] {
-            listViewGroup5,
-            listViewGroup6});
+            listViewGroup1,
+            listViewGroup2});
             this.lvHosts.HideSelection = false;
             this.lvHosts.Location = new System.Drawing.Point(3, 104);
             this.lvHosts.Name = "lvHosts";
@@ -432,7 +432,7 @@ namespace nmf_view
             this.lblQuickStart.Font = new System.Drawing.Font("Segoe UI", 11F);
             this.lblQuickStart.Location = new System.Drawing.Point(29, 251);
             this.lblQuickStart.Name = "lblQuickStart";
-            this.lblQuickStart.Size = new System.Drawing.Size(1384, 309);
+            this.lblQuickStart.Size = new System.Drawing.Size(1384, 425);
             this.lblQuickStart.TabIndex = 5;
             this.lblQuickStart.Text = resources.GetString("lblQuickStart.Text");
             this.lblQuickStart.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
@@ -487,10 +487,11 @@ namespace nmf_view
             // 
             // lnkGithub
             // 
+            this.lnkGithub.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.lnkGithub.AutoSize = true;
             this.lnkGithub.Font = new System.Drawing.Font("Segoe UI", 11F);
             this.lnkGithub.LinkArea = new System.Windows.Forms.LinkArea(37, 9);
-            this.lnkGithub.Location = new System.Drawing.Point(35, 569);
+            this.lnkGithub.Location = new System.Drawing.Point(35, 676);
             this.lnkGithub.Name = "lnkGithub";
             this.lnkGithub.Size = new System.Drawing.Size(580, 41);
             this.lnkGithub.TabIndex = 0;

@@ -1,4 +1,5 @@
 ﻿using Microsoft.Win32;
+using System;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
@@ -24,6 +25,22 @@ namespace nmf_view
             try
             {
                 Process.Start("regedit.exe", "/m");
+            }
+            catch
+            {
+                /* User may abort */
+            }
+        }
+
+        /// <summary>
+        /// Open Windows Explorer with the specified file selected.
+        /// </summary>
+        /// <param name="manifestFilename"></param>
+        internal static void OpenExplorerTo(string manifestFilename)
+        {
+            try
+            {
+                Process.Start("explorer.exe", $"/select,\"{manifestFilename}\"");
             }
             catch
             {
