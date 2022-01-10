@@ -31,9 +31,9 @@ namespace nmf_view
         {
             this.components = new System.ComponentModel.Container();
             System.Windows.Forms.ColumnHeader chManifest;
+            System.Windows.Forms.ListViewGroup listViewGroup3 = new System.Windows.Forms.ListViewGroup("User-Registered (HKCU)", System.Windows.Forms.HorizontalAlignment.Left);
+            System.Windows.Forms.ListViewGroup listViewGroup4 = new System.Windows.Forms.ListViewGroup("System-Registered (HKLM)", System.Windows.Forms.HorizontalAlignment.Left);
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(frmMain));
-            System.Windows.Forms.ListViewGroup listViewGroup1 = new System.Windows.Forms.ListViewGroup("User-Registered (HKCU)", System.Windows.Forms.HorizontalAlignment.Left);
-            System.Windows.Forms.ListViewGroup listViewGroup2 = new System.Windows.Forms.ListViewGroup("System-Registered (HKLM)", System.Windows.Forms.HorizontalAlignment.Left);
             this.tcApp = new System.Windows.Forms.TabControl();
             this.pageMonitor = new System.Windows.Forms.TabPage();
             this.txtLog = new System.Windows.Forms.RichTextBox();
@@ -234,13 +234,13 @@ namespace nmf_view
             this.lvHosts.Dock = System.Windows.Forms.DockStyle.Fill;
             this.lvHosts.FullRowSelect = true;
             this.lvHosts.GridLines = true;
-            listViewGroup1.Header = "User-Registered (HKCU)";
-            listViewGroup1.Name = "lvgHKCU";
-            listViewGroup2.Header = "System-Registered (HKLM)";
-            listViewGroup2.Name = "lvgHKLM";
+            listViewGroup3.Header = "User-Registered (HKCU)";
+            listViewGroup3.Name = "lvgHKCU";
+            listViewGroup4.Header = "System-Registered (HKLM)";
+            listViewGroup4.Name = "lvgHKLM";
             this.lvHosts.Groups.AddRange(new System.Windows.Forms.ListViewGroup[] {
-            listViewGroup1,
-            listViewGroup2});
+            listViewGroup3,
+            listViewGroup4});
             this.lvHosts.HideSelection = false;
             this.lvHosts.Location = new System.Drawing.Point(3, 104);
             this.lvHosts.Name = "lvHosts";
@@ -296,9 +296,10 @@ namespace nmf_view
             this.label2.AutoSize = true;
             this.label2.Location = new System.Drawing.Point(5, 32);
             this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(713, 30);
+            this.label2.Size = new System.Drawing.Size(1063, 30);
             this.label2.TabIndex = 0;
-            this.label2.Text = "Select which NativeMessagingHosts this application should intercept/proxy.";
+            this.label2.Text = "NOT YET IMPLEMENTED (Eventually, select which NativeMessagingHosts this applicati" +
+    "on should intercept/proxy.)";
             // 
             // pageInjector
             // 
