@@ -2,22 +2,23 @@
   "manifest_version": 2,
   "name": "NativeMessaging Meddler Demo",
   "short_name": "nmfDemo",
-  "description": "Call the NativeMessagingHost on every navigation",
-  "version": "1.0.0.0",
+  "description": "Call the NativeMessagingHost on every navigation and request",
+  "version": "1.0.1.0",
   "author": "Eric Lawrence (@ericlaw)",
   "minimum_chrome_version": "51",
 
   "background": {
     "scripts": ["background.js"],
-    "persistent": false
+    "persistent": true
   },
-  
+
   "browser_action": {},
-  
+
   "permissions": [
     "tabs",
     "nativeMessaging",
     "webNavigation",
+    "webRequest",
     "<all_urls>"
   ]
 }
