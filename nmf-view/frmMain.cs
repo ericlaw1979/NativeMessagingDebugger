@@ -1,5 +1,6 @@
 ﻿using Microsoft.Win32;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
@@ -201,6 +202,13 @@ namespace nmf_view
                     }
                 }
 
+                // Validate that the message is well-formed JSON
+                if (!(JSON.JsonDecode(sMessage, out JSON.JSONParseErrors oErrors) is Hashtable htMessage))
+                {
+                    // TODO: Force logging body if (!oSettings.bLogMessageBodies)
+                    log($"ERROR: JSON Parsing failed at offset {oErrors.iErrorIndex} {oErrors.sWarningText}.");
+                }
+
                 if (oSettings.bReflectToExtension &&
                     (sMessage.Length < (1024 * 1024)))    // Don't reflect messages over 1mb. They're illegal!
                 {
@@ -293,6 +301,13 @@ namespace nmf_view
                     {
                         log($"Call to Fiddler failed: {e.Message}");
                     }
+                }
+
+                // Validate that the message is well-formed JSON
+                if (!(JSON.JsonDecode(sMessage, out JSON.JSONParseErrors oErrors) is Hashtable htMessage))
+                {
+                    // TODO: Force logging body if (!oSettings.bLogMessageBodies)
+                    log($"ERROR: JSON Parsing failed at offset {oErrors.iErrorIndex} {oErrors.sWarningText}.");
                 }
 
                 if (null != oSettings.strmToExt)
