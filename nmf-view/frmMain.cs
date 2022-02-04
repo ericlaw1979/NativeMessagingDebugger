@@ -349,7 +349,16 @@ namespace nmf_view
         {
             if (null != swLogfile)
             {
-                swLogfile.Close();
+                try
+                {
+                    log("Closing log file.", false);
+                    swLogfile.Close();
+                }
+                catch (Exception eX)
+                {
+                    log($"Closing log file failed; {eX.Message}");
+                }
+                swLogfile = null;
             }
         }
 
