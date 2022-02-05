@@ -153,7 +153,7 @@ namespace nmf_view
                 }
 
                 Int32 cbBodyPromised = BitConverter.ToInt32(arrLenBytes, 0);
-                log($"Extension promised a message of length: {cbBodyPromised:N0}");
+                log($"Extension promised a message to app of length: {cbBodyPromised:N0}");
                 if (cbBodyPromised == 0)
                 {
                     log("Got an empty (size==0) message. Is that legal?? Disconnecting.");
@@ -246,7 +246,7 @@ namespace nmf_view
                 }
 
                 Int32 cbBodyPromised = BitConverter.ToInt32(arrLenBytes, 0);
-                log($"App promised a message of length: {cbBodyPromised:N0}");
+                log($"App promised a message to extension of length: {cbBodyPromised:N0}");
                 if (cbBodyPromised == 0)
                 {
                     log("Got an empty (size==0) message. Is that legal?? Disconnecting.");
