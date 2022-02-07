@@ -47,7 +47,7 @@ namespace nmf_view
         private static async Task WriteToApp(string sMessage)
         {
             byte[] arrPayload = Encoding.UTF8.GetBytes(sMessage);
-            byte[] arrSize = BitConverter.GetBytes(arrPayload.Length);
+            byte[] arrSize = BitConverter.GetBytes((UInt32)arrPayload.Length);
             await oSettings.strmToApp.WriteAsync(arrSize, 0, 4);
             await oSettings.strmToApp.WriteAsync(arrPayload, 0, arrPayload.Length);
             await oSettings.strmToApp.FlushAsync();
@@ -56,7 +56,7 @@ namespace nmf_view
         private static async Task WriteToExtension(string sMessage)
         {
             byte[] arrPayload = Encoding.UTF8.GetBytes(sMessage);
-            byte[] arrSize = BitConverter.GetBytes(arrPayload.Length);
+            byte[] arrSize = BitConverter.GetBytes((UInt32)arrPayload.Length);
             await oSettings.strmToExt.WriteAsync(arrSize, 0, 4);
             await oSettings.strmToExt.WriteAsync(arrPayload, 0, arrPayload.Length);
             await oSettings.strmToExt.FlushAsync();
@@ -152,7 +152,7 @@ namespace nmf_view
                     cbSizeRead += cbThisRead;
                 }
 
-                Int32 cbBodyPromised = BitConverter.ToInt32(arrLenBytes, 0);
+                UInt32 cbBodyPromised = BitConverter.ToUInt32(arrLenBytes, 0);
                 log($"Extension promised a message of length: {cbBodyPromised:N0}");
                 if (cbBodyPromised == 0)
                 {
@@ -161,21 +161,29 @@ namespace nmf_view
                     return;
                 }
 
+                if (cbBodyPromised >= Int32.MaxValue)
+                {
+                    log("Was promised a message >=2gb. Technically this is legal but this app only allows 2GB due to .NET Framework size limits.");
+                    detachExtension();
+                    return;
+                }
+
                 byte[] buffer = new byte[cbBodyPromised];
-                int cbBodyRead = 0;
+                UInt32 cbBodyRead = 0;
 
                 while (cbBodyRead < cbBodyPromised)
                 {
-                    int cbThisRead = await oSettings.strmFromExt.ReadAsync(buffer, cbBodyRead, cbBodyPromised - cbBodyRead);
+                    int cbThisRead = await oSettings.strmFromExt.ReadAsync(buffer, (int)cbBodyRead, (int)(cbBodyPromised - cbBodyRead));
                     if (cbThisRead < 1)
                     {
                         log($"Got EOF while reading message data from (Extension); got only {cbBodyRead} bytes. Disconnecting.");
                         detachExtension();
+                        return;
                     }
-                    MaybeWriteBytesToLogfile("ReadBodyFromExt-RawRead: ", buffer, cbBodyRead, cbThisRead);
-                    cbBodyRead += cbThisRead;
+                    MaybeWriteBytesToLogfile("ReadBodyFromExt-RawRead: ", buffer, (int)cbBodyRead, cbThisRead);
+                    cbBodyRead += (uint)cbThisRead;
                 }
-                string sMessage = Encoding.UTF8.GetString(buffer, 0, cbBodyRead);
+                string sMessage = Encoding.UTF8.GetString(buffer, 0, (int)cbBodyRead);
                 log(sMessage, true);
 
                 if (oSettings.bSendToFiddler)
@@ -245,7 +253,7 @@ namespace nmf_view
                     cbSizeRead += cbThisRead;
                 }
 
-                Int32 cbBodyPromised = BitConverter.ToInt32(arrLenBytes, 0);
+                UInt32 cbBodyPromised = BitConverter.ToUInt32(arrLenBytes, 0);
                 log($"App promised a message of length: {cbBodyPromised:N0}");
                 if (cbBodyPromised == 0)
                 {
@@ -262,21 +270,22 @@ namespace nmf_view
                 }
 
                 byte[] buffer = new byte[cbBodyPromised];
-                int cbBodyRead = 0;
+                UInt32 cbBodyRead = 0;
 
                 while (cbBodyRead < cbBodyPromised)
                 {
-                    int cbThisRead = await oSettings.strmFromApp.ReadAsync(buffer, cbBodyRead, cbBodyPromised - cbBodyRead);
+                    int cbThisRead = await oSettings.strmFromApp.ReadAsync(buffer, (int)cbBodyRead, (int)(cbBodyPromised - cbBodyRead));
                     if (cbThisRead < 1)
                     {
                         log($"Got EOF while reading message data from (App); got only {cbBodyRead} bytes. Disconnecting.");
                         detachApp();
+                        return;
                     }
-                    MaybeWriteBytesToLogfile("ReadBodyFromApp-RawRead: ", buffer, cbBodyRead, cbThisRead);
-                    cbBodyRead += cbThisRead;
+                    MaybeWriteBytesToLogfile("ReadBodyFromApp-RawRead: ", buffer, (int)cbBodyRead, cbThisRead);
+                    cbBodyRead += (uint)cbThisRead;
                 }
 
-                string sMessage = Encoding.UTF8.GetString(buffer, 0, cbBodyPromised);
+                string sMessage = Encoding.UTF8.GetString(buffer, 0, (int)cbBodyPromised);
                 log(sMessage, true);
 
                 if (oSettings.bSendToFiddler)
