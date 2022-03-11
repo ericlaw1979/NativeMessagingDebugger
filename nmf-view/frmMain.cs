@@ -375,7 +375,6 @@ namespace nmf_view
         {
             lblVersion.Text = $"v{Application.ProductVersion} [{((8 == IntPtr.Size) ? "64" : "32")}-bit]";
             this.Text += $" [pid:{Process.GetCurrentProcess().Id}{(Utilities.IsUserAnAdmin() ? " Elevated" : String.Empty)}]";
-            //https://source.chromium.org/chromium/chromium/src/+/main:chrome/test/data/native_messaging/native_hosts/echo.py;l=30?q=parent-window&sq=&ss=chromium
 
             var arrArgs = Environment.GetCommandLineArgs();
             if (arrArgs.Length > 1) oSettings.sExtensionID = arrArgs[1];
@@ -397,11 +396,15 @@ namespace nmf_view
             if (arrArgs.Length > 2)
             {
                 // The parent-window value is only non-zero when the calling context is not a background script.
+                // https://stackoverflow.com/questions/56544152/when-does-chrome-pass-a-value-other-then-0-to-the-native-messaging-host-for-pa
+                // https://source.chromium.org/chromium/chromium/src/+/main:chrome/test/data/native_messaging/native_hosts/echo.py;l=30?q=parent-window&sq=&ss=chromium
                 if (arrArgs[2].StartsWith("--parent-window="))
                 {
                     if (!ulong.TryParse(arrArgs[2].Substring(16), out oSettings.iParentWindow))
+                    {
                         oSettings.iParentWindow = 0;
-                    log($"parent-window: {oSettings.iParentWindow:x8}");
+                    }
+                    log($"parent-window: {oSettings.iParentWindow:x8} {((oSettings.iParentWindow==0)?"(Background Script)":String.Empty)}");
                 }
             }
 
@@ -513,7 +516,7 @@ namespace nmf_view
                 }
             }
             */
-            log ($"Did not find any likely nativeHost for {oSettings.sExtensionID}");
+            log ($"Did not find any likely nativeHost for {oSettings.sExtensionID}. If you are using this tool as a mock, the Injector tab will allow you to craft messages to send to the browser.");
             return false;
         }
 

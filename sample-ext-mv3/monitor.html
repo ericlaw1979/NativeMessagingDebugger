@@ -1,0 +1,19 @@
+<!doctype html>
+<html>
+<head>
+<title>MV3 Native Messaging Monitor test page</title>
+<script src="monitor.js"></script>
+<body>
+<h2>MV3 - Outgoing Messages</h2>
+<textarea id="txtSend" style="width:1000px;height:300px"></textarea>
+<br />
+<button id="btnPost">Post Message to port</button>
+<button id="btnSend">sendNativeMessage (one-shot)</button> ---
+<button id="btnDisconnect">disconnect()</button>
+<button id="btnNull">just null it out</button>
+
+<hr />
+<h2>Incoming Messages</h2>
+<div id="divIncoming"></div>
+</body>
+</html>

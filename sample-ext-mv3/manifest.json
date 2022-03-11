@@ -1,0 +1,28 @@
+{
+  "manifest_version": 3,
+  "name": "MV3 NativeMessaging Meddler Demo",
+  "short_name": "nmfDemo",
+  "description": "MV3 - Call the NativeMessagingHost on every navigation.",
+  "version": "3.0.0.0",
+  "author": "Eric Lawrence (@ericlaw)",
+  "minimum_chrome_version": "51",
+
+  "background": {
+    "service_worker": "sw-background.js"
+  },
+
+  "action": {},
+
+  "permissions": [
+    "tabs",
+    "notifications",
+    "nativeMessaging",
+    "webNavigation",
+    "webRequest"
+  ],
+  
+  "host_permissions" : [
+    "<all_urls>"
+  ]
+        
+}

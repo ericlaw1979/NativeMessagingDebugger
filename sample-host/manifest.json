@@ -4,6 +4,7 @@
   "path": "c:\\src\\nm\\nmf-view\\bin\\release\\RealNMHostApp.proxy.exe",
   "type": "stdio",
   "allowed_origins": [
-    "chrome-extension://aalonnpchfmkpopkohiccmghgkipcjcb/"
+    "chrome-extension://aalonnpchfmkpopkohiccmghgkipcjcb/",
+    "chrome-extension://nfclgfodehghedcnfnffpaeieonfobmj/"
   ]
 }
