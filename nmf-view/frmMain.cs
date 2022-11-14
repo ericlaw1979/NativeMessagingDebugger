@@ -373,6 +373,15 @@ namespace nmf_view
 
         private void frmMain_Load(object sender, EventArgs e)
         {
+            // Configure default options.
+            clbOptions.SetItemChecked(2, true); // Propagate closures
+            clbOptions.SetItemChecked(3, true); // Record bodies
+
+            // Configure options based on tokens in the executable name.
+            string sCurrentExe = Application.ExecutablePath;
+            if (sCurrentExe.Contains(".fiddler.")) clbOptions.SetItemChecked(1, true);
+            if (sCurrentExe.Contains(".log.")) clbOptions.SetItemChecked(4, true);
+
             lblVersion.Text = $"v{Application.ProductVersion} [{((8 == IntPtr.Size) ? "64" : "32")}-bit]";
             this.Text += $" [pid:{Process.GetCurrentProcess().Id}{(Utilities.IsUserAnAdmin() ? " Elevated" : String.Empty)}]";
 
@@ -380,11 +389,12 @@ namespace nmf_view
             if (arrArgs.Length > 1) oSettings.sExtensionID = arrArgs[1];
             if (String.IsNullOrEmpty(oSettings.sExtensionID))
             {
+                clbOptions.SetItemChecked(2, false); Debug.Assert(oSettings.bPropagateClosures == false);
                 oSettings.sExtensionID = "unknown";
                 log("Started without an extension ID.\r\n\r\n"
                   + "Note: This application does not seem to have been started by a Chromium-based browser\r\n"
-                  + "to respond to NativeMessaging requests. Use the CONFIG tab below to reconfigure a\r\n"
-                  + "registered NativeMessaging Host to proxy its traffic through an instance of this app.\r\n"
+                  + "to respond to NativeMessaging requests. Use the `Configure Hosts` tab below to reconfigure\r\n"
+                  + "a registered NativeMessaging Host to proxy its traffic through an instance of this app.\r\n"
                   + "\r\n---------------------------------\r\n"
                   );
                 tcApp.SelectedTab = pageAbout;
@@ -413,13 +423,7 @@ namespace nmf_view
             toolTip1.SetToolTip(pbApp, $"Click to set the ClientHandler to another instance of this app.");
             log("Listening for messages...");
 
-            clbOptions.SetItemChecked(2, true); // Propagate closures
-            clbOptions.SetItemChecked(3, true); // Record bodies
-            string sCurrentExe = Application.ExecutablePath;
-            if (sCurrentExe.Contains(".fiddler.")) clbOptions.SetItemChecked(1, true);
-            if (sCurrentExe.Contains(".log.")) clbOptions.SetItemChecked(4, true);
-
-            if (oSettings.sExtensionID != "unknown") ConnectMostLikelyApp();
+            /* if (oSettings.sExtensionID != "unknown") */ ConnectMostLikelyApp();
             WaitForMessages();
         }
 
@@ -471,7 +475,7 @@ namespace nmf_view
 
         private bool ConnectMostLikelyApp()
         {
-            // If we are RealHost.proxy.exe, then see whether RealHost.exe exists, and if so, use that.
+            // If we are `RealHost.proxy.exe`, then see whether `RealHost.exe` exists, and if so, use that.
             // Remove any option flags in the command line.
             string sCurrentExe = Application.ExecutablePath.Replace(".log", string.Empty).Replace(".fiddler", string.Empty);
             if (sCurrentExe.Contains(".proxy"))
@@ -516,7 +520,8 @@ namespace nmf_view
                 }
             }
             */
-            log ($"Did not find any likely nativeHost for {oSettings.sExtensionID}. If you are using this tool as a mock, the Injector tab will allow you to craft messages to send to the browser.");
+            log ($"Did not find any likely nativeHost for {oSettings.sExtensionID}. If you are using this tool as a mock,\r\nthe Injector tab allows sending messages to the browser.");
+            clbOptions.SetItemChecked(2, false); Debug.Assert(oSettings.bPropagateClosures == false);
             return false;
         }
 
