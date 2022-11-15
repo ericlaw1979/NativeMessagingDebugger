@@ -214,7 +214,7 @@ namespace nmf_view
                 if (!(JSON.JsonDecode(sMessage, out JSON.JSONParseErrors oErrors) is Hashtable htMessage))
                 {
                     // TODO: Force logging body if (!oSettings.bLogMessageBodies)
-                    log($"ERROR: JSON Parsing failed at offset {oErrors.iErrorIndex} {oErrors.sWarningText}.");
+                    log($"!!! ERROR: JSON Parsing failed at offset {oErrors.iErrorIndex} {oErrors.sWarningText}. Note:Strings must be double-quoted.");
                 }
 
                 if (oSettings.bReflectToExtension &&
@@ -316,7 +316,7 @@ namespace nmf_view
                 if (!(JSON.JsonDecode(sMessage, out JSON.JSONParseErrors oErrors) is Hashtable htMessage))
                 {
                     // TODO: Force logging body if (!oSettings.bLogMessageBodies)
-                    log($"ERROR: JSON Parsing failed at offset {oErrors.iErrorIndex} {oErrors.sWarningText}.");
+                    log($"!!! ERROR: JSON Parsing failed at offset {oErrors.iErrorIndex} {oErrors.sWarningText}. Note:Strings must be double-quoted.");
                 }
 
                 if (null != oSettings.strmToExt)

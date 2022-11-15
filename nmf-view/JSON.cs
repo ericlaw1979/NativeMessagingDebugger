@@ -1,3 +1,4 @@
+// Enabled strict mode: Strings must start with double-quotes not single quotes, and IMPLIED_IDENTIFIER_NAME is forbidden.
 // TODO: Need to support Chrome's weird "ignore the comments" behavior.
 // https://twitter.com/ericlaw/status/1459209318004408322
 
@@ -68,7 +69,7 @@ namespace nmf_view
             /// <summary>
             /// This token is a JavaScript Identifier that was not properly quoted as it should have been.
             /// </summary>
-            IMPLIED_IDENTIFIER_NAME = 12
+            // IMPLIED_IDENTIFIER_NAME = 12
             // Note: We don't allow Regular Expressions in JSON as they are not allowed per-spec
         }
 
@@ -126,7 +127,7 @@ namespace nmf_view
                     // We *should* be looking at a quoted identifier name here. Some non-compliant JSON authors omit
                     // the wrapping quote marks, so we accommodate that case first.
                     string sName;
-                    if (jtToken == JSONTokens.IMPLIED_IDENTIFIER_NAME)
+                    /*if (jtToken == JSONTokens.IMPLIED_IDENTIFIER_NAME)
                     {
                         sName = ParseUnquotedIdentifier(json, ref index, ref oErrors);
                         if (null == sName)
@@ -135,7 +136,7 @@ namespace nmf_view
                             return null;
                         }
                     }
-                    else
+                    else*/
                     {
                         Debug.Assert(jtToken == JSONTokens.STRING, "Unexpected Token type; expecting String/Identifier");
                         sName = ParseString(json, ref index);
@@ -216,8 +217,8 @@ namespace nmf_view
         {
             switch (LookAhead(json, index)) 
             {
-                case JSONTokens.IMPLIED_IDENTIFIER_NAME:
-                    return ParseUnquotedIdentifier(json, ref index, ref oErrors);
+                //case JSONTokens.IMPLIED_IDENTIFIER_NAME:
+                //    return ParseUnquotedIdentifier(json, ref index, ref oErrors);
 
                 case JSONTokens.STRING:
                     return ParseString(json, ref index);
@@ -257,7 +258,7 @@ namespace nmf_view
         /// <param name="json"></param>
         /// <param name="index"></param>
         /// <returns></returns>
-        private static string ParseUnquotedIdentifier(char[] json, ref int index, ref JSONParseErrors oErrors)
+        /*private static string ParseUnquotedIdentifier(char[] json, ref int index, ref JSONParseErrors oErrors)
         {
             EatWhitespace(json, ref index);
 
@@ -297,7 +298,7 @@ namespace nmf_view
                 s.ToString(),
                 ixStart);
             return s.ToString();
-        }
+        }*/
 
         private static string ParseString(char[] json, ref int index)
         {
@@ -305,8 +306,12 @@ namespace nmf_view
             char c;
 
             EatWhitespace(json, ref index);
-            
-            // Eat the opening quote
+
+            // Validate the opening quote.
+            if (json[index] != '"')
+            {
+                return null;
+            }
             index++;
 
             bool complete = false;
@@ -373,7 +378,7 @@ namespace nmf_view
 
             }
 
-            if (!complete) 
+            if (!complete)
             {
                 return null;
             }
@@ -509,10 +514,10 @@ namespace nmf_view
             // At this point, we can check to see if this is a simple ASCII text string and
             // if so, return JSON.TOKEN_IMPLIED_IDENTIFIER which basically behaves like JSON.TOKEN_STRING
             //
-            if (isValidIdentifierStart(json[index]))
-            {
-                return JSONTokens.IMPLIED_IDENTIFIER_NAME;
-            }
+            //if (isValidIdentifierStart(json[index]))
+            //{
+            //    return JSONTokens.IMPLIED_IDENTIFIER_NAME;
+            //}
 
             return JSONTokens.NONE;
         }

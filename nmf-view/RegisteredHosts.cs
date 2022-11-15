@@ -132,7 +132,7 @@ namespace nmf_view
                 string sJSON = File.ReadAllText(oHE.ManifestFilename, Encoding.UTF8);
                 if (!(JSON.JsonDecode(sJSON, out JSON.JSONParseErrors oErrors) is Hashtable htManifest))
                 {
-                    oHE.Description = $"ERROR: Manifest Parsing failed at offset {oErrors.iErrorIndex} {oErrors.sWarningText}.";
+                    oHE.Description = $"ERROR: Manifest Parsing failed at offset {oErrors.iErrorIndex} {oErrors.sWarningText}. Note:Strings must be double-quoted.";
                     oHE.Command = "???";
                     oHE.AllowedExtensions = "???";
                     return;
