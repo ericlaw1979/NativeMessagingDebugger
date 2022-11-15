@@ -5,7 +5,7 @@
   "description": "Call the NativeMessagingHost on every navigation and request",
   "version": "1.0.1.0",
   "author": "Eric Lawrence (@ericlaw)",
-  "minimum_chrome_version": "51",
+  "minimum_chrome_version": "106",
 
   "background": {
     "scripts": ["background.js"],

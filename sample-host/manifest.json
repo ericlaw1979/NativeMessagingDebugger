@@ -1,11 +1,12 @@
 {
   "name": "com.bayden.nmf.demo",
   "description": "NativeMessaging Meddler Demo Extension",
-  "path": "c:\\src\\nm\\nmf-view\\bin\\release\\RealNMHostApp.proxy.exe",
+  "path": "c:\\src\\nm\\nmf-view\\bin\\release\\nmf-view.exe",
   "type": "stdio",
   "allowed_origins": [
     "chrome-extension://aalonnpchfmkpopkohiccmghgkipcjcb/",
     "chrome-extension://nfclgfodehghedcnfnffpaeieonfobmj/",
-    "chrome-extension://kcffoaompaiglpglfkgcjocajeiafnbb/"
+    "chrome-extension://kcffoaompaiglpglfkgcjocajeiafnbb/",
+    "chrome-extension://lbpfamigmpipdpaphgofepolklbldlbe/"
   ]
 }
