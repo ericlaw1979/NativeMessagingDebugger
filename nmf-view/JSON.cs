@@ -1,4 +1,8 @@
-// Enabled strict mode: Strings must start with double-quotes not single quotes, and IMPLIED_IDENTIFIER_NAME is forbidden.
+// Enabled strict mode: Strings must start with double-quotes not single quotes, 
+// and IMPLIED_IDENTIFIER_NAME is forbidden. 
+// See https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON#javascript_and_json_differences
+// for differences between JS and JSON.
+//
 // TODO: Need to support Chrome's weird "ignore the comments" behavior.
 // https://twitter.com/ericlaw/status/1459209318004408322
 
