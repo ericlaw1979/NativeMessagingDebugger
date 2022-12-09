@@ -211,7 +211,7 @@ namespace nmf_view
                 }
 
                 // Validate that the message is well-formed JSON
-                if (!(JSON.JsonDecode(sMessage, out JSON.JSONParseErrors oErrors) is Hashtable htMessage))
+                if (null == JSON.JsonDecode(sMessage, out JSON.JSONParseErrors oErrors))
                 {
                     // TODO: Force logging body if (!oSettings.bLogMessageBodies)
                     log($"!!! ERROR: JSON Parsing failed at offset {oErrors.iErrorIndex} {oErrors.sWarningText}. Note:Strings must be double-quoted.");
@@ -313,7 +313,7 @@ namespace nmf_view
                 }
 
                 // Validate that the message is well-formed JSON
-                if (!(JSON.JsonDecode(sMessage, out JSON.JSONParseErrors oErrors) is Hashtable htMessage))
+                if (null == JSON.JsonDecode(sMessage, out JSON.JSONParseErrors oErrors))
                 {
                     // TODO: Force logging body if (!oSettings.bLogMessageBodies)
                     log($"!!! ERROR: JSON Parsing failed at offset {oErrors.iErrorIndex} {oErrors.sWarningText}. Note:Strings must be double-quoted.");

@@ -95,7 +95,7 @@ namespace nmf_view
                 object value = ParseValue(charArray, ref index, ref success, ref oErrors);
                 return value;
             } 
-            else 
+            else
             {
                 return null;
             }
