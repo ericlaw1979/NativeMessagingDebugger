@@ -1,7 +1,7 @@
 The tl;dr is that the extension spawns a native executable and communicates with it over stdin/stdout.
 
-- [Explainer Blog Post](https://textslashplain.com/2022/01/08/debug-native-messaging/)
-- [My blog on Native Messaging](https://textslashplain.com/2020/09/04/web-to-app-communication-the-native-messaging-api/)
+- Read the [Explainer Blog Post](https://textslashplain.com/2022/01/08/debug-native-messaging/) to learn how to use this tool.
+- See my [blog post on how Native Messaging works](https://textslashplain.com/2020/09/04/web-to-app-communication-the-native-messaging-api/)
 - [Chrome DevDocs](https://developer.chrome.com/docs/apps/nativeMessaging/#native-messaging-debugging)
 - [Edge DevDocs on Native Messaging](https://docs.microsoft.com/en-us/microsoft-edge/extensions-chromium/developer-guide/native-messaging?tabs=windows)
 
