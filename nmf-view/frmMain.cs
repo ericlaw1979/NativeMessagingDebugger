@@ -379,6 +379,7 @@ namespace nmf_view
 
             // Configure options based on tokens in the executable name.
             string sCurrentExe = Application.ExecutablePath;
+            if (sCurrentExe.Contains('.reflect.')) clbOptions.SetItemChecked(0, true);
             if (sCurrentExe.Contains(".fiddler.")) clbOptions.SetItemChecked(1, true);
             if (sCurrentExe.Contains(".log.")) clbOptions.SetItemChecked(4, true);
 
