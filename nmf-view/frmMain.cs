@@ -1,4 +1,5 @@
 ﻿using Microsoft.Win32;
+using Microsoft.Win32.SafeHandles;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -6,6 +7,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Net.Http;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -14,6 +16,34 @@ namespace nmf_view
 {
     public partial class frmMain : Form
     {
+        enum FileType : uint
+        {
+            FileTypeChar = 0x0002,
+            FileTypeDisk = 0x0001,
+            FileTypePipe = 0x0003,
+            FileTypeRemote = 0x8000,
+            FileTypeUnknown = 0x0000,
+        }
+        const int STD_INPUT_HANDLE = -10;
+        const int STD_OUTPUT_HANDLE = -11;
+
+        [DllImport("kernel32.dll", SetLastError = true, ExactSpelling = true)]
+        static extern bool FreeConsole();
+
+        private const int SW_SHOW = 5;
+        [DllImport("User32")]
+        private static extern int ShowWindow(int hwnd, int nCmdShow);
+
+        [DllImport("kernel32.dll")]
+        static extern FileType GetFileType(IntPtr hFile);
+        [DllImport("Kernel32.dll", SetLastError = true)]
+        static extern IntPtr GetStdHandle(int nStdHandle);
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        static extern bool CloseHandle(IntPtr hObject);
+
+
         #region Boilerplate
         public frmMain()
         {
@@ -114,17 +144,23 @@ namespace nmf_view
         {
             if (!IsExtensionAttached()) return;
             log("Detaching Extension pipes...");
-            if (null != oSettings.strmToExt) { oSettings.strmToExt.Close(); oSettings.strmToExt = null; }
-            if (null != oSettings.strmFromExt) { oSettings.strmFromExt.Close(); oSettings.strmFromExt = null; }
+            if (null != oSettings.strmToExt) { oSettings.strmToExt.Close(); oSettings.strmToExt = null; log("stdout closed."); }
+            if (null != oSettings.strmFromExt) { oSettings.strmFromExt.Close(); oSettings.strmFromExt = null; log("stdin closed."); }
+            // Unfortunately, none of this seems to work to let Chrome know we're going away. But maybe it's not looking at the pipes, only the process?
+            // FreeConsole();
+            //CloseHandle(GetStdHandle(STD_INPUT_HANDLE));
+            //CloseHandle(GetStdHandle(STD_OUTPUT_HANDLE));
+            log("Extension pipes detached.");
             markExtensionDetached();
             if (oSettings.bPropagateClosures) detachApp();
         }
         private void detachApp()
         {
             if (!IsAppAttached()) return;
-            log("Detaching App pipes.");
+            log("Detaching NativeHost App pipes.");
             if (null != oSettings.strmToApp) { oSettings.strmToApp.Close(); oSettings.strmToApp = null; }
             if (null != oSettings.strmFromApp) { oSettings.strmFromApp.Close(); oSettings.strmFromApp = null; }
+            log("NativeHost App pipes detached.");
             markAppDetached();
             if (oSettings.bPropagateClosures) detachExtension();
         }
@@ -373,18 +409,21 @@ namespace nmf_view
 
         private void frmMain_Load(object sender, EventArgs e)
         {
+            Trace.WriteLine("NMF-View was started with the command line: " + Environment.CommandLine);
             // Configure default options.
             clbOptions.SetItemChecked(2, true); // Propagate closures
             clbOptions.SetItemChecked(3, true); // Record bodies
 
             // Configure options based on tokens in the executable name.
             string sCurrentExe = Application.ExecutablePath;
-            if (sCurrentExe.Contains('.reflect.')) clbOptions.SetItemChecked(0, true);
+            if (sCurrentExe.Contains(".reflect.")) clbOptions.SetItemChecked(0, true);
             if (sCurrentExe.Contains(".fiddler.")) clbOptions.SetItemChecked(1, true);
             if (sCurrentExe.Contains(".log.")) clbOptions.SetItemChecked(4, true);
 
+            string sExtraInfo = $" [{Path.GetFileName(Application.ExecutablePath)}:{Process.GetCurrentProcess().Id}{(Utilities.IsUserAnAdmin() ? " Elevated" : String.Empty)}]";
+            log($"I am{sExtraInfo}");
             lblVersion.Text = $"v{Application.ProductVersion} [{((8 == IntPtr.Size) ? "64" : "32")}-bit]";
-            this.Text += $" [pid:{Process.GetCurrentProcess().Id}{(Utilities.IsUserAnAdmin() ? " Elevated" : String.Empty)}]";
+            Text += sExtraInfo;  // Append extra info to form caption.
 
             var arrArgs = Environment.GetCommandLineArgs();
             if (arrArgs.Length > 1) oSettings.sExtensionID = arrArgs[1];
@@ -424,7 +463,11 @@ namespace nmf_view
             toolTip1.SetToolTip(pbApp, $"Click to set the ClientHandler to another instance of this app.");
             log("Listening for messages...");
 
-            /* if (oSettings.sExtensionID != "unknown") */ ConnectMostLikelyApp();
+            // Ensure that our window is showing.
+            if (!sCurrentExe.Contains(".noshow.")) ShowWindow((int)this.Handle, SW_SHOW);
+
+            /* if (oSettings.sExtensionID != "unknown") */
+            ConnectMostLikelyApp();
             WaitForMessages();
         }
 
@@ -432,8 +475,13 @@ namespace nmf_view
         {
             try
             {
+                var hIn = GetStdHandle(STD_INPUT_HANDLE);
+                var hInType = GetFileType(hIn);
+                var hOut = GetStdHandle(STD_OUTPUT_HANDLE);
+                var hOutType = GetFileType(hOut);
                 oSettings.strmFromExt = Console.OpenStandardInput();
                 oSettings.strmToExt = Console.OpenStandardOutput();
+                log($"Attached stdin (0x{hIn.ToInt64():x}, {hInType}) and stdout (0x{hOut.ToInt64():x}, {hOutType}) streams");
                 pbExt.BackColor = Color.FromArgb(159, 255, 159);
                 Task.Run(async () => await MessageShufflerForExtension());
             }

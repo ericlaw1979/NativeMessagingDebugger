@@ -6,9 +6,14 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Eric Lawrence")]
 [assembly: AssemblyProduct("NMM")]
-[assembly: AssemblyCopyright("Copyright ©2022 Eric Lawrence")]
+[assembly: AssemblyCopyright("Copyright ©2023 Eric Lawrence")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 [assembly: ComVisible(false)]
 
-[assembly: AssemblyVersion("1.0.2.0")]
+[assembly: AssemblyVersion("1.0.3.0")]
+
+// v1.0.3
+// Add ".reflect." and ".noshow." name tokens.
+// Ensure form is visible by default, even if launched directly with SW_HIDE.
+// Log stdio handle values.
