@@ -1,7 +1,5 @@
 ﻿using Microsoft.Win32;
-using Microsoft.Win32.SafeHandles;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
@@ -9,6 +7,7 @@ using System.IO;
 using System.Net.Http;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -16,6 +15,11 @@ namespace nmf_view
 {
     public partial class frmMain : Form
     {
+        // TODO: This doesn't actually seem to help. Canceling the token does not appear to
+        // cause the ReadAsync calls to exit. Hrmph.
+        readonly CancellationTokenSource ctsApp = new CancellationTokenSource();
+        readonly CancellationTokenSource ctsExt = new CancellationTokenSource();
+
         enum FileType : uint
         {
             FileTypeChar = 0x0002,
@@ -26,6 +30,7 @@ namespace nmf_view
         }
         const int STD_INPUT_HANDLE = -10;
         const int STD_OUTPUT_HANDLE = -11;
+        const int STD_ERROR_HANDLE = -12;
 
         [DllImport("kernel32.dll", SetLastError = true, ExactSpelling = true)]
         static extern bool FreeConsole();
@@ -43,6 +48,9 @@ namespace nmf_view
         [return: MarshalAs(UnmanagedType.Bool)]
         static extern bool CloseHandle(IntPtr hObject);
 
+        [DllImport("kernel32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        static extern bool CancelIo(IntPtr hFile);
 
         #region Boilerplate
         public frmMain()
@@ -143,13 +151,29 @@ namespace nmf_view
         private void detachExtension()
         {
             if (!IsExtensionAttached()) return;
+            log("Canceling reads...");
+            ctsExt.Cancel();
             log("Detaching Extension pipes...");
-            if (null != oSettings.strmToExt) { oSettings.strmToExt.Close(); oSettings.strmToExt = null; log("stdout closed."); }
-            if (null != oSettings.strmFromExt) { oSettings.strmFromExt.Close(); oSettings.strmFromExt = null; log("stdin closed."); }
-            // Unfortunately, none of this seems to work to let Chrome know we're going away. But maybe it's not looking at the pipes, only the process?
+            // Unfortunately, none of this seems to work to let the other side know we're going away.
+            if (null != oSettings.strmToExt) {
+                // CancelIo(GetStdHandle(STD_OUTPUT_HANDLE));
+                // CloseHandle(GetStdHandle(STD_OUTPUT_HANDLE));
+                oSettings.strmToExt.Close();
+                oSettings.strmToExt = null;
+                log("stdout closed.");
+                Application.DoEvents();
+            }
+            if (null != oSettings.strmFromExt) {
+                oSettings.strmFromExt.Close();
+                oSettings.strmFromExt = null;
+                // CancelIo(GetStdHandle(STD_INPUT_HANDLE));
+                // CloseHandle(GetStdHandle(STD_INPUT_HANDLE));// TODO: This hangs. Not sure why.
+                log("stdin closed.");
+            }
+            // CancelIo(GetStdHandle(STD_ERROR_HANDLE));
+            // CloseHandle(GetStdHandle(STD_ERROR_HANDLE));
             // FreeConsole();
-            //CloseHandle(GetStdHandle(STD_INPUT_HANDLE));
-            //CloseHandle(GetStdHandle(STD_OUTPUT_HANDLE));
+
             log("Extension pipes detached.");
             markExtensionDetached();
             if (oSettings.bPropagateClosures) detachApp();
@@ -157,6 +181,8 @@ namespace nmf_view
         private void detachApp()
         {
             if (!IsAppAttached()) return;
+            log("Canceling reads...");
+            ctsApp.Cancel();
             log("Detaching NativeHost App pipes.");
             if (null != oSettings.strmToApp) { oSettings.strmToApp.Close(); oSettings.strmToApp = null; }
             if (null != oSettings.strmFromApp) { oSettings.strmFromApp.Close(); oSettings.strmFromApp = null; }
@@ -177,7 +203,7 @@ namespace nmf_view
                 int cbSizeRead = 0;
                 while (cbSizeRead < 4)
                 {
-                    int cbThisRead = await oSettings.strmFromExt.ReadAsync(arrLenBytes, cbSizeRead, arrLenBytes.Length - cbSizeRead);
+                    int cbThisRead = await oSettings.strmFromExt.ReadAsync(arrLenBytes, cbSizeRead, arrLenBytes.Length - cbSizeRead, ctsExt.Token);
                     if (cbThisRead < 1)
                     {
                         log($"Got EOF while trying to read message size from (Extension); got only {cbSizeRead} bytes. Disconnecting.");
@@ -209,7 +235,7 @@ namespace nmf_view
 
                 while (cbBodyRead < cbBodyPromised)
                 {
-                    int cbThisRead = await oSettings.strmFromExt.ReadAsync(buffer, (int)cbBodyRead, (int)(cbBodyPromised - cbBodyRead));
+                    int cbThisRead = await oSettings.strmFromExt.ReadAsync(buffer, (int)cbBodyRead, (int)(cbBodyPromised - cbBodyRead), ctsExt.Token);
                     if (cbThisRead < 1)
                     {
                         log($"Got EOF while reading message data from (Extension); got only {cbBodyRead} bytes. Disconnecting.");
@@ -278,7 +304,7 @@ namespace nmf_view
                 int cbSizeRead = 0;
                 while (cbSizeRead < 4)
                 {
-                    int cbThisRead = await oSettings.strmFromApp.ReadAsync(arrLenBytes, cbSizeRead, arrLenBytes.Length - cbSizeRead);
+                    int cbThisRead = await oSettings.strmFromApp.ReadAsync(arrLenBytes, cbSizeRead, arrLenBytes.Length - cbSizeRead, ctsApp.Token);
                     if (cbThisRead < 1)
                     {
                         log($"Got EOF while trying to read message size from (App); got only {cbSizeRead} bytes. Disconnecting.");
@@ -310,7 +336,7 @@ namespace nmf_view
 
                 while (cbBodyRead < cbBodyPromised)
                 {
-                    int cbThisRead = await oSettings.strmFromApp.ReadAsync(buffer, (int)cbBodyRead, (int)(cbBodyPromised - cbBodyRead));
+                    int cbThisRead = await oSettings.strmFromApp.ReadAsync(buffer, (int)cbBodyRead, (int)(cbBodyPromised - cbBodyRead), ctsApp.Token);
                     if (cbThisRead < 1)
                     {
                         log($"Got EOF while reading message data from (App); got only {cbBodyRead} bytes. Disconnecting.");
@@ -481,7 +507,8 @@ namespace nmf_view
                 var hOutType = GetFileType(hOut);
                 oSettings.strmFromExt = Console.OpenStandardInput();
                 oSettings.strmToExt = Console.OpenStandardOutput();
-                log($"Attached stdin (0x{hIn.ToInt64():x}, {hInType}) and stdout (0x{hOut.ToInt64():x}, {hOutType}) streams");
+                log($"Attached stdin (0x{hIn.ToInt64():x}, {hInType}) and " +
+                    $"stdout (0x{hOut.ToInt64():x}, {hOutType}) streams.");
                 pbExt.BackColor = Color.FromArgb(159, 255, 159);
                 Task.Run(async () => await MessageShufflerForExtension());
             }
