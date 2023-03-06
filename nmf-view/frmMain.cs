@@ -1,10 +1,12 @@
 ﻿using Microsoft.Win32;
+using Microsoft.Win32.SafeHandles;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Net.Http;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
@@ -156,20 +158,38 @@ namespace nmf_view
             log("Detaching Extension pipes...");
             // Unfortunately, none of this seems to work to let the other side know we're going away.
             if (null != oSettings.strmToExt) {
-                // CancelIo(GetStdHandle(STD_OUTPUT_HANDLE));
-                // CloseHandle(GetStdHandle(STD_OUTPUT_HANDLE));
+                FieldInfo fiHandle = oSettings.strmToExt.GetType().GetField("_handle", BindingFlags.GetField | BindingFlags.NonPublic | BindingFlags.Instance);
+                SafeFileHandle sh = fiHandle.GetValue(oSettings.strmToExt) as SafeFileHandle;
+
+                if (null != sh)
+                {
+                    log ($"stdout handle was 0x{sh.DangerousGetHandle().ToInt64():x}");
+                    // typeof(SafeFileHandle).InvokeMember("ReleaseHandle", BindingFlags.InvokeMethod | BindingFlags.NonPublic | BindingFlags.Instance, null, sh, new object[] { });
+                }
+
                 oSettings.strmToExt.Close();
                 oSettings.strmToExt = null;
+                CancelIo(GetStdHandle(STD_OUTPUT_HANDLE));
+                CloseHandle(GetStdHandle(STD_OUTPUT_HANDLE));
                 log("stdout closed.");
-                Application.DoEvents();
             }
             if (null != oSettings.strmFromExt) {
+                FieldInfo fiHandle = oSettings.strmFromExt.GetType().GetField("_handle", BindingFlags.GetField | BindingFlags.NonPublic | BindingFlags.Instance);
+                SafeFileHandle sh = fiHandle.GetValue(oSettings.strmFromExt) as SafeFileHandle;
+
+                if (null != sh)
+                {
+                    log($"stdin handle was 0x{sh.DangerousGetHandle().ToInt64():x}");
+                    //typeof(SafeFileHandle).InvokeMember("ReleaseHandle", BindingFlags.InvokeMethod | BindingFlags.NonPublic | BindingFlags.Instance, null, sh, new object[] { });
+                }
+
                 oSettings.strmFromExt.Close();
                 oSettings.strmFromExt = null;
-                // CancelIo(GetStdHandle(STD_INPUT_HANDLE));
-                // CloseHandle(GetStdHandle(STD_INPUT_HANDLE));// TODO: This hangs. Not sure why.
+                CancelIo(GetStdHandle(STD_INPUT_HANDLE));
+               // CloseHandle(GetStdHandle(STD_INPUT_HANDLE)); // TODO: This hangs because there's still the async read on that pipe.
                 log("stdin closed.");
             }
+            // MessageBox.Show("Closed the stdin?");
             // CancelIo(GetStdHandle(STD_ERROR_HANDLE));
             // CloseHandle(GetStdHandle(STD_ERROR_HANDLE));
             // FreeConsole();
