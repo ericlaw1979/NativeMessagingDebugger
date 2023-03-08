@@ -127,7 +127,7 @@ namespace nmf_view
                     return;
                 }
 
-                // TODO: Check Manifest filename for special characters that cause problems.
+                // TODO: Check Manifest filename for special characters that cause problems. crbug.com/335558
 
                 string sJSON = File.ReadAllText(oHE.ManifestFilename, Encoding.UTF8);
                 if (!(JSON.JsonDecode(sJSON, out JSON.JSONParseErrors oErrors) is Hashtable htManifest))
@@ -141,14 +141,14 @@ namespace nmf_view
                 oHE.Description = htManifest["description"] as string ?? String.Empty;
                 oHE.Command = htManifest["path"] as string ?? String.Empty;
 
-                // TODO: Check PATH (after full-qualification) filename for special characters that cause problems.
+                // TODO: Check PATH (after full-qualification) filename for special characters that cause problems. crbug.com/335558
 
                 oHE.OriginalCommand = oHE.Command;  // TODO: Fix this.
 
                 ArrayList alAllowedOrigins = htManifest["allowed_origins"] as ArrayList;
                 if (alAllowedOrigins != null)
                 {
-                    oHE.AllowedExtensions = string.Join(";", alAllowedOrigins.ToArray().Select(s => (s as String).Trim().TrimEnd('/').Replace("chrome-extension://", String.Empty)));
+                    oHE.AllowedExtensions = string.Join("; ", alAllowedOrigins.ToArray().Select(s => (s as String).Trim().TrimEnd('/').Replace("chrome-extension://", String.Empty)));
                 }
                 else
                 {

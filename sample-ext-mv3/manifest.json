@@ -3,7 +3,7 @@
   "name": "MV3 NativeMessaging Meddler Demo",
   "short_name": "nmfDemo",
   "description": "MV3 - Call the NativeMessagingHost on every navigation.",
-  "version": "3.0.1.0",
+  "version": "3.0.4.0",
   "author": "Eric Lawrence (@ericlaw)",
   "minimum_chrome_version": "106",
 
