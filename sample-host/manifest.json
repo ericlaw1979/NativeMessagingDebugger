@@ -8,5 +8,8 @@
     "chrome-extension://nfclgfodehghedcnfnffpaeieonfobmj/",
     "chrome-extension://kcffoaompaiglpglfkgcjocajeiafnbb/",
     "chrome-extension://lbpfamigmpipdpaphgofepolklbldlbe/"
+  ],
+  "allowed_extensions": [ 
+  	"mozilla_firefox_nmf_view_demo@bayden.com"
   ]
 }
