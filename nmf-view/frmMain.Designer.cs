@@ -128,10 +128,10 @@ namespace nmf_view
             this.txtLog.Dock = System.Windows.Forms.DockStyle.Fill;
             this.txtLog.Font = new System.Drawing.Font("Consolas", 9.857143F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.txtLog.ForeColor = System.Drawing.SystemColors.Window;
-            this.txtLog.Location = new System.Drawing.Point(3, 178);
+            this.txtLog.Location = new System.Drawing.Point(3, 226);
             this.txtLog.Name = "txtLog";
             this.txtLog.ReadOnly = true;
-            this.txtLog.Size = new System.Drawing.Size(1457, 630);
+            this.txtLog.Size = new System.Drawing.Size(1457, 582);
             this.txtLog.TabIndex = 3;
             this.txtLog.Text = "";
             this.txtLog.WordWrap = false;
@@ -147,7 +147,7 @@ namespace nmf_view
             this.pnlTop.Location = new System.Drawing.Point(3, 4);
             this.pnlTop.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.pnlTop.Name = "pnlTop";
-            this.pnlTop.Size = new System.Drawing.Size(1457, 174);
+            this.pnlTop.Size = new System.Drawing.Size(1457, 222);
             this.pnlTop.TabIndex = 2;
             // 
             // clbOptions
@@ -161,18 +161,19 @@ namespace nmf_view
             "Tamper using Fiddler",
             "Propagate closures",
             "Log message bodies",
-            "Write log to Desktop"});
+            "Write log to Desktop",
+            "Immortal"});
             this.clbOptions.Location = new System.Drawing.Point(1012, 0);
             this.clbOptions.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.clbOptions.Name = "clbOptions";
-            this.clbOptions.Size = new System.Drawing.Size(445, 174);
+            this.clbOptions.Size = new System.Drawing.Size(445, 222);
             this.clbOptions.TabIndex = 1;
             this.clbOptions.ItemCheck += new System.Windows.Forms.ItemCheckEventHandler(this.clbOptions_ItemCheck);
             // 
             // pbApp
             // 
             this.pbApp.Image = ((System.Drawing.Image)(resources.GetObject("pbApp.Image")));
-            this.pbApp.Location = new System.Drawing.Point(696, -5);
+            this.pbApp.Location = new System.Drawing.Point(798, 21);
             this.pbApp.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.pbApp.Name = "pbApp";
             this.pbApp.Size = new System.Drawing.Size(193, 172);
@@ -185,7 +186,7 @@ namespace nmf_view
             // pbExt
             // 
             this.pbExt.Image = global::nmf_view.Properties.Resources.ext;
-            this.pbExt.Location = new System.Drawing.Point(0, 0);
+            this.pbExt.Location = new System.Drawing.Point(14, 21);
             this.pbExt.Margin = new System.Windows.Forms.Padding(0);
             this.pbExt.Name = "pbExt";
             this.pbExt.Size = new System.Drawing.Size(193, 168);
@@ -200,7 +201,7 @@ namespace nmf_view
             this.lblArrow.AutoSize = true;
             this.lblArrow.Font = new System.Drawing.Font("Segoe Print", 39.85714F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lblArrow.ForeColor = System.Drawing.SystemColors.ControlDarkDark;
-            this.lblArrow.Location = new System.Drawing.Point(168, -4);
+            this.lblArrow.Location = new System.Drawing.Point(182, 17);
             this.lblArrow.Name = "lblArrow";
             this.lblArrow.Size = new System.Drawing.Size(653, 189);
             this.lblArrow.TabIndex = 4;
@@ -296,7 +297,7 @@ namespace nmf_view
             this.label2.AutoSize = true;
             this.label2.Location = new System.Drawing.Point(5, 32);
             this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(1217, 32);
+            this.label2.Size = new System.Drawing.Size(1218, 32);
             this.label2.TabIndex = 0;
             this.label2.Text = "NOT YET IMPLEMENTED (Eventually, select which NativeMessagingHosts this applicati" +
     "on should intercept/proxy.)";
@@ -472,7 +473,7 @@ namespace nmf_view
             this.lblVersion.AutoSize = true;
             this.lblVersion.Location = new System.Drawing.Point(39, 113);
             this.lblVersion.Name = "lblVersion";
-            this.lblVersion.Size = new System.Drawing.Size(93, 32);
+            this.lblVersion.Size = new System.Drawing.Size(94, 32);
             this.lblVersion.TabIndex = 2;
             this.lblVersion.Text = "v0.0.0.0";
             // 

@@ -34,8 +34,8 @@ namespace nmf_view
         const int STD_OUTPUT_HANDLE = -11;
         const int STD_ERROR_HANDLE = -12;
 
-        [DllImport("kernel32.dll", SetLastError = true, ExactSpelling = true)]
-        static extern bool FreeConsole();
+//        [DllImport("kernel32.dll", SetLastError = true, ExactSpelling = true)]
+//        static extern bool FreeConsole();
 
         private const int SW_SHOW = 5;
         [DllImport("User32")]
@@ -86,20 +86,38 @@ namespace nmf_view
 
         private static async Task WriteToApp(string sMessage)
         {
-            byte[] arrPayload = Encoding.UTF8.GetBytes(sMessage);
-            byte[] arrSize = BitConverter.GetBytes((UInt32)arrPayload.Length);
-            await oSettings.strmToApp.WriteAsync(arrSize, 0, 4);
-            await oSettings.strmToApp.WriteAsync(arrPayload, 0, arrPayload.Length);
-            await oSettings.strmToApp.FlushAsync();
-        }
+            try
+            {
+                byte[] arrPayload = Encoding.UTF8.GetBytes(sMessage);
+                byte[] arrSize = BitConverter.GetBytes((UInt32)arrPayload.Length);
+                await oSettings.strmToApp.WriteAsync(arrSize, 0, 4);
+                await oSettings.strmToApp.WriteAsync(arrPayload, 0, arrPayload.Length);
+                await oSettings.strmToApp.FlushAsync();
+            }
+            catch (Exception eX)
+            {
+                MessageBox.Show("Failed to send message\n" + eX.Message, "WriteToApp Failed");
+            }
+}
 
         private static async Task WriteToExtension(string sMessage)
         {
-            byte[] arrPayload = Encoding.UTF8.GetBytes(sMessage);
-            byte[] arrSize = BitConverter.GetBytes((UInt32)arrPayload.Length);
-            await oSettings.strmToExt.WriteAsync(arrSize, 0, 4);
-            await oSettings.strmToExt.WriteAsync(arrPayload, 0, arrPayload.Length);
-            await oSettings.strmToExt.FlushAsync();
+            try
+            {
+                if (null == oSettings.strmToExt) return;
+                byte[] arrPayload = Encoding.UTF8.GetBytes(sMessage);
+                byte[] arrSize = BitConverter.GetBytes((UInt32)arrPayload.Length);
+                await oSettings.strmToExt.WriteAsync(arrSize, 0, 4);
+                if (null == oSettings.strmToExt) return;
+                await oSettings.strmToExt.WriteAsync(arrPayload, 0, arrPayload.Length);
+                if (null == oSettings.strmToExt) return;
+                await oSettings.strmToExt.FlushAsync();
+                if (null == oSettings.strmToExt) return;
+            }
+            catch (Exception eX)
+            {
+                MessageBox.Show("Failed to send message\n" + eX.Message, "WriteToExtension Failed");
+            }
         }
 
         private void MaybeWriteToLogfile(string sMsg)
@@ -135,10 +153,16 @@ namespace nmf_view
 
         private void markExtensionDetached()
         {
+            Trace.WriteLine("markExtensionDetached()");
             this.BeginInvoke((MethodInvoker)delegate
             {
+                Trace.WriteLine("in the delegate...");
                 pbExt.BackColor = Color.DarkGray;
+                Trace.WriteLine("color was set");
                 toolTip1.SetToolTip(pbExt, $"Was connected to {oSettings.sExtensionID}.\nDisconnected");
+                Trace.WriteLine("tooltip was set");
+                btnSendToExtension.Enabled = false;
+                Trace.WriteLine("extension was enabled. Done callback.");
             });
         }
 
@@ -148,58 +172,74 @@ namespace nmf_view
             {
                 pbApp.BackColor = Color.DarkGray;
                 toolTip1.SetToolTip(pbApp, $"Was connected to {oSettings.sExeName}.\nDisconnected");
+                btnSendToApp.Enabled = false;
             });
         }
         private void detachExtension()
         {
-            if (!IsExtensionAttached()) return;
-            log("Canceling reads...");
-            ctsExt.Cancel();
-            log("Detaching Extension pipes...");
-            // Unfortunately, none of this seems to work to let the other side know we're going away.
-            if (null != oSettings.strmToExt) {
-                FieldInfo fiHandle = oSettings.strmToExt.GetType().GetField("_handle", BindingFlags.GetField | BindingFlags.NonPublic | BindingFlags.Instance);
-                SafeFileHandle sh = fiHandle.GetValue(oSettings.strmToExt) as SafeFileHandle;
-
-                if (null != sh)
+            try
+            {
+                if (!IsExtensionAttached()) return; // TODO: We should have asserts that verify that the UX reflects the current state properly.
+                log("Canceling reads...");
+                ctsExt.Cancel();  // Doesn't seem to help.
+                log("Detaching Extension pipes...");
+                // Unfortunately, none of this seems to work to let the other side know we're going away.
+                if (null != oSettings.strmToExt)
                 {
-                    log ($"stdout handle was 0x{sh.DangerousGetHandle().ToInt64():x}");
-                    // typeof(SafeFileHandle).InvokeMember("ReleaseHandle", BindingFlags.InvokeMethod | BindingFlags.NonPublic | BindingFlags.Instance, null, sh, new object[] { });
+                    FieldInfo fiHandle = oSettings.strmToExt.GetType().GetField("_handle", BindingFlags.GetField | BindingFlags.NonPublic | BindingFlags.Instance);
+                    if (null != fiHandle)
+                    {
+                        SafeFileHandle sh = fiHandle.GetValue(oSettings.strmToExt) as SafeFileHandle;
+
+                        if (null != sh)
+                        {
+                            log($"stdout handle was 0x{sh.DangerousGetHandle().ToInt64():x}");
+                            // typeof(SafeFileHandle).InvokeMember("ReleaseHandle", BindingFlags.InvokeMethod | BindingFlags.NonPublic | BindingFlags.Instance, null, sh, new object[] { });
+                        }
+                    }
+
+                    oSettings.strmToExt.Close();
+                    oSettings.strmToExt = null;
+                    CancelIo(GetStdHandle(STD_OUTPUT_HANDLE));
+                    CloseHandle(GetStdHandle(STD_OUTPUT_HANDLE));
+                    log("stdout closed.");
                 }
-
-                oSettings.strmToExt.Close();
-                oSettings.strmToExt = null;
-                CancelIo(GetStdHandle(STD_OUTPUT_HANDLE));
-                CloseHandle(GetStdHandle(STD_OUTPUT_HANDLE));
-                log("stdout closed.");
-            }
-            if (null != oSettings.strmFromExt) {
-                FieldInfo fiHandle = oSettings.strmFromExt.GetType().GetField("_handle", BindingFlags.GetField | BindingFlags.NonPublic | BindingFlags.Instance);
-                SafeFileHandle sh = fiHandle.GetValue(oSettings.strmFromExt) as SafeFileHandle;
-
-                if (null != sh)
+                if (null != oSettings.strmFromExt)
                 {
-                    log($"stdin handle was 0x{sh.DangerousGetHandle().ToInt64():x}");
-                    //typeof(SafeFileHandle).InvokeMember("ReleaseHandle", BindingFlags.InvokeMethod | BindingFlags.NonPublic | BindingFlags.Instance, null, sh, new object[] { });
+                    FieldInfo fiHandle = oSettings.strmFromExt.GetType().GetField("_handle", BindingFlags.GetField | BindingFlags.NonPublic | BindingFlags.Instance);
+                    if (null != fiHandle)
+                    {
+                        SafeFileHandle sh = fiHandle.GetValue(oSettings.strmFromExt) as SafeFileHandle;
+                        if (null != sh)
+                        {
+                            log($"stdin handle was 0x{sh.DangerousGetHandle().ToInt64():x}");
+                            //typeof(SafeFileHandle).InvokeMember("ReleaseHandle", BindingFlags.InvokeMethod | BindingFlags.NonPublic | BindingFlags.Instance, null, sh, new object[] { });
+                        }
+                    }
+                    CancelIo(GetStdHandle(STD_INPUT_HANDLE));
+                    oSettings.strmFromExt.Close();
+                    oSettings.strmFromExt = null;
+
+                    // CloseHandle(GetStdHandle(STD_INPUT_HANDLE)); // TODO: This hangs because there's still the async read on that pipe.
+                    log("stdin closed.");
                 }
+                // MessageBox.Show("Closed the stdin?");
+                // CancelIo(GetStdHandle(STD_ERROR_HANDLE));
+                // CloseHandle(GetStdHandle(STD_ERROR_HANDLE));
+                // FreeConsole();
 
-                oSettings.strmFromExt.Close();
-                oSettings.strmFromExt = null;
-                CancelIo(GetStdHandle(STD_INPUT_HANDLE));
-               // CloseHandle(GetStdHandle(STD_INPUT_HANDLE)); // TODO: This hangs because there's still the async read on that pipe.
-                log("stdin closed.");
+                log("Extension pipes detached.");
             }
-            // MessageBox.Show("Closed the stdin?");
-            // CancelIo(GetStdHandle(STD_ERROR_HANDLE));
-            // CloseHandle(GetStdHandle(STD_ERROR_HANDLE));
-            // FreeConsole();
-
-            log("Extension pipes detached.");
+            catch (Exception eX)
+            {
+                MessageBox.Show(eX.Message, "Error detaching from Extension");
+            }
             markExtensionDetached();
             if (oSettings.bPropagateClosures) detachApp();
         }
         private void detachApp()
         {
+            Trace.WriteLine("detachApp()");
             if (!IsAppAttached()) return;
             log("Canceling reads...");
             ctsApp.Cancel();
@@ -410,6 +450,7 @@ namespace nmf_view
         private void log(string sMsg, bool bIsBody = false)
         {
             sMsg = $"{DateTime.Now:HH:mm:ss:ffff} - {sMsg}";
+            Trace.WriteLine(sMsg);
             if (!bIsBody || oSettings.bLogMessageBodies)
             {
                 this.BeginInvoke((MethodInvoker)delegate
@@ -456,6 +497,7 @@ namespace nmf_view
         private void frmMain_Load(object sender, EventArgs e)
         {
             Trace.WriteLine("NMF-View was started with the command line: " + Environment.CommandLine);
+            Console.Error.WriteLine("****\n**** NMF-View was started with the command line: " + Environment.CommandLine + "\n****");
             // Configure default options.
             clbOptions.SetItemChecked(2, true); // Propagate closures
             clbOptions.SetItemChecked(3, true); // Record bodies
@@ -465,6 +507,7 @@ namespace nmf_view
             if (sCurrentExe.Contains(".reflect.")) clbOptions.SetItemChecked(0, true);
             if (sCurrentExe.Contains(".fiddler.")) clbOptions.SetItemChecked(1, true);
             if (sCurrentExe.Contains(".log.")) clbOptions.SetItemChecked(4, true);
+            if (sCurrentExe.Contains(".immortal.")) clbOptions.SetItemChecked(5, true);
 
             string sExtraInfo = $" [{Path.GetFileName(Application.ExecutablePath)}:{Process.GetCurrentProcess().Id}{(Utilities.IsUserAnAdmin() ? " Elevated" : String.Empty)}]";
             log($"I am{sExtraInfo}");
@@ -525,10 +568,13 @@ namespace nmf_view
                 var hInType = GetFileType(hIn);
                 var hOut = GetStdHandle(STD_OUTPUT_HANDLE);
                 var hOutType = GetFileType(hOut);
+                var hErr = GetStdHandle(STD_ERROR_HANDLE);
+                var hErrType = GetFileType(hErr);
                 oSettings.strmFromExt = Console.OpenStandardInput();
                 oSettings.strmToExt = Console.OpenStandardOutput();
                 log($"Attached stdin (0x{hIn.ToInt64():x}, {hInType}) and " +
                     $"stdout (0x{hOut.ToInt64():x}, {hOutType}) streams.");
+                log($"Not using stderr (0x{hErr.ToInt64():x}, {hErrType}).");
                 pbExt.BackColor = Color.FromArgb(159, 255, 159);
                 Task.Run(async () => await MessageShufflerForExtension());
             }
@@ -554,6 +600,22 @@ namespace nmf_view
                 else
                 {
                     CloseLogfile();
+                }
+                return;
+            }
+            if (e.Index == 5)
+            {
+                e.NewValue = CheckState.Indeterminate;
+                if (e.CurrentValue != CheckState.Unchecked) { return; }
+                if (Utilities.DenyProcessTermination())
+                {
+                    log("Immortality enabled.\r\nTerminateProcess() calls from non-elevated applications will now be ignored with an\r\n" +
+                        "ACCESS_DENIED result, but unfortunately this cannot protect us from our Chromium parent\r\n" +
+                        "because it already has a handle to us with the Terminate process right granted.\r\n");
+                }
+                else
+                {
+                    log("Immortality could not be enabled.");
                 }
                 return;
             }
@@ -745,7 +807,7 @@ namespace nmf_view
                 {
                     // https://source.chromium.org/chromium/chromium/src/+/main:chrome/browser/extensions/api/messaging/native_process_launcher_win.cc;l=134;drc=09a4396a448775456084fe36bb84662f5757d988
                     rtbTroubleshoot.AppendText($"{sPipe}\r\n");
-                    // It would be nice to show the owner here, but we can't because we cannot get the handle to the pipe
+                    // It would be nice to show the owner here, but we can't do so readily because we cannot get the handle to the pipe
                     // which only allows one connection.
                     // https://docs.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-getnamedpipeserverprocessid
                 }
