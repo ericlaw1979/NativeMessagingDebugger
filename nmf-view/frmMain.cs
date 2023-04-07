@@ -159,7 +159,7 @@ namespace nmf_view
                 Trace.WriteLine("in the delegate...");
                 pbExt.BackColor = Color.DarkGray;
                 Trace.WriteLine("color was set");
-                toolTip1.SetToolTip(pbExt, $"Was connected to {oSettings.sExtensionID}.\nDisconnected");
+                toolTip1.SetToolTip(pbExt, $"Was connected to {oSettings.sExtensionID ?? "unknown"}.\nDisconnected");
                 Trace.WriteLine("tooltip was set");
                 btnSendToExtension.Enabled = false;
                 Trace.WriteLine("extension was enabled. Done callback.");
@@ -171,7 +171,7 @@ namespace nmf_view
             this.BeginInvoke((MethodInvoker)delegate
             {
                 pbApp.BackColor = Color.DarkGray;
-                toolTip1.SetToolTip(pbApp, $"Was connected to {oSettings.sExeName}.\nDisconnected");
+                toolTip1.SetToolTip(pbApp, $"Was connected to {oSettings.sExeName ?? "unknown"}.\nDisconnected");
                 btnSendToApp.Enabled = false;
             });
         }
