@@ -21,6 +21,7 @@ namespace nmf_view
         // cause the ReadAsync calls to exit. Hrmph.
         readonly CancellationTokenSource ctsApp = new CancellationTokenSource();
         readonly CancellationTokenSource ctsExt = new CancellationTokenSource();
+        bool bAppIsShuttingdown = false;
 
         enum FileType : uint
         {
@@ -153,21 +154,19 @@ namespace nmf_view
 
         private void markExtensionDetached()
         {
+            if (bAppIsShuttingdown) return;
             Trace.WriteLine("markExtensionDetached()");
             this.BeginInvoke((MethodInvoker)delegate
             {
-                Trace.WriteLine("in the delegate...");
                 pbExt.BackColor = Color.DarkGray;
-                Trace.WriteLine("color was set");
                 toolTip1.SetToolTip(pbExt, $"Was connected to {oSettings.sExtensionID ?? "unknown"}.\nDisconnected");
-                Trace.WriteLine("tooltip was set");
                 btnSendToExtension.Enabled = false;
-                Trace.WriteLine("extension was enabled. Done callback.");
             });
         }
 
         private void markAppDetached()
         {
+            if (bAppIsShuttingdown) return;
             this.BeginInvoke((MethodInvoker)delegate
             {
                 pbApp.BackColor = Color.DarkGray;
@@ -451,14 +450,15 @@ namespace nmf_view
         {
             sMsg = $"{DateTime.Now:HH:mm:ss:ffff} - {sMsg}";
             Trace.WriteLine(sMsg);
-            if (!bIsBody || oSettings.bLogMessageBodies)
+            MaybeWriteToLogfile(sMsg);
+
+            if (!bAppIsShuttingdown && (!bIsBody || oSettings.bLogMessageBodies))
             {
                 this.BeginInvoke((MethodInvoker)delegate
                 {
                     txtLog.AppendText(sMsg + "\r\n");
                 });
             }
-            MaybeWriteToLogfile(sMsg);
         }
 
         private void CreateLogfile()
@@ -925,6 +925,7 @@ namespace nmf_view
 
         private void frmMain_FormClosed(object sender, FormClosedEventArgs e)
         {
+            bAppIsShuttingdown = true;
             detachApp();
             detachExtension();
             CloseLogfile();
