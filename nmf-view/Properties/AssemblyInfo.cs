@@ -10,8 +10,13 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 [assembly: ComVisible(false)]
+[assembly: AssemblyVersion("1.0.6.0")]
 
-[assembly: AssemblyVersion("1.0.4.0")]
+// v1.0.6
+// Add support for 'logstderr' filename token
+
+// v1.0.5
+// Release
 
 // v1.0.3
 // Add ".reflect." and ".noshow." name tokens.

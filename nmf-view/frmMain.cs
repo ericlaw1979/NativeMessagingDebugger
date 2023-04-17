@@ -53,7 +53,7 @@ namespace nmf_view
 
         [DllImport("kernel32.dll")]
         [return: MarshalAs(UnmanagedType.Bool)]
-        static extern bool CancelIo(IntPtr hFile);
+        static extern bool CancelIoEx(IntPtr hFile, IntPtr pNull);
 
         #region Boilerplate
         public frmMain()
@@ -71,6 +71,7 @@ namespace nmf_view
             public bool bPropagateClosures;
             public bool bLogMessageBodies;
             public bool bLogToDesktop;
+            public bool bLogToStdErr;
             public ulong iParentWindow;
             public string sExtensionID;
             public string sExeName;
@@ -121,6 +122,18 @@ namespace nmf_view
             }
         }
 
+        private void MaybeWriteToStdErr(string sMsg)
+        {
+            try
+            {
+                if (!oSettings.bLogToStdErr) return;
+                Console.Error.WriteLine(sMsg);
+            }
+            catch (Exception eX)
+            {
+                Utilities.ReportException(eX);
+            }
+        }
         private void MaybeWriteToLogfile(string sMsg)
         {
             if (!oSettings.bLogToDesktop || (null == swLogfile)) return;
@@ -199,7 +212,7 @@ namespace nmf_view
 
                     oSettings.strmToExt.Close();
                     oSettings.strmToExt = null;
-                    CancelIo(GetStdHandle(STD_OUTPUT_HANDLE));
+                    CancelIoEx(GetStdHandle(STD_OUTPUT_HANDLE), IntPtr.Zero);
                     CloseHandle(GetStdHandle(STD_OUTPUT_HANDLE));
                     log("stdout closed.");
                 }
@@ -215,18 +228,16 @@ namespace nmf_view
                             //typeof(SafeFileHandle).InvokeMember("ReleaseHandle", BindingFlags.InvokeMethod | BindingFlags.NonPublic | BindingFlags.Instance, null, sh, new object[] { });
                         }
                     }
-                    CancelIo(GetStdHandle(STD_INPUT_HANDLE));
+                    log("CancelIoEx(StdInput,0)...");
+                    CancelIoEx(GetStdHandle(STD_INPUT_HANDLE), IntPtr.Zero);
                     oSettings.strmFromExt.Close();
                     oSettings.strmFromExt = null;
 
-                    // CloseHandle(GetStdHandle(STD_INPUT_HANDLE)); // TODO: This hangs because there's still the async read on that pipe.
+                    log("CloseHandle(StdInput)...");
+                    Application.DoEvents();
+                    CloseHandle(GetStdHandle(STD_INPUT_HANDLE));
                     log("stdin closed.");
                 }
-                // MessageBox.Show("Closed the stdin?");
-                // CancelIo(GetStdHandle(STD_ERROR_HANDLE));
-                // CloseHandle(GetStdHandle(STD_ERROR_HANDLE));
-                // FreeConsole();
-
                 log("Extension pipes detached.");
             }
             catch (Exception eX)
@@ -451,6 +462,7 @@ namespace nmf_view
             sMsg = $"{DateTime.Now:HH:mm:ss:ffff} - {sMsg}";
             Trace.WriteLine(sMsg);
             MaybeWriteToLogfile(sMsg);
+            MaybeWriteToStdErr(sMsg);
 
             if (!bAppIsShuttingdown && (!bIsBody || oSettings.bLogMessageBodies))
             {
@@ -507,6 +519,7 @@ namespace nmf_view
             if (sCurrentExe.Contains(".reflect.")) clbOptions.SetItemChecked(0, true);
             if (sCurrentExe.Contains(".fiddler.")) clbOptions.SetItemChecked(1, true);
             if (sCurrentExe.Contains(".log.")) clbOptions.SetItemChecked(4, true);
+            if (sCurrentExe.Contains(".logstderr.")) { oSettings.bLogToStdErr = true; log("Echoing log messages to StdErr."); }
             if (sCurrentExe.Contains(".immortal.")) clbOptions.SetItemChecked(5, true);
 
             string sExtraInfo = $" [{Path.GetFileName(Application.ExecutablePath)}:{Process.GetCurrentProcess().Id}{(Utilities.IsUserAnAdmin() ? " Elevated" : String.Empty)}]";
