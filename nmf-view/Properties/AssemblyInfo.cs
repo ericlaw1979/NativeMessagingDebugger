@@ -10,7 +10,10 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 [assembly: ComVisible(false)]
-[assembly: AssemblyVersion("1.0.6.0")]
+[assembly: AssemblyVersion("1.0.7.0")]
+
+// v1.0.7
+// Display the invoking process' name and PID
 
 // v1.0.6
 // Add support for 'logstderr' filename token

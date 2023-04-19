@@ -79,6 +79,7 @@ namespace nmf_view
             public Stream strmToApp;
             public Stream strmFromExt;
             public Stream strmToExt;
+            public Process procParent;
         }
 
         static app_state oSettings;
@@ -508,8 +509,15 @@ namespace nmf_view
 
         private void frmMain_Load(object sender, EventArgs e)
         {
-            Trace.WriteLine("NMF-View was started with the command line: " + Environment.CommandLine);
-            Console.Error.WriteLine("****\n**** NMF-View was started with the command line: " + Environment.CommandLine + "\n****");
+            oSettings.procParent = ProcessInfo.GetParent(Process.GetCurrentProcess());
+
+            {
+                string sStartupInfo = $"NMF-View was started with the command line: {Environment.CommandLine} by " +
+                    ((null == oSettings.procParent) ? " an unknown parent." : oSettings.procParent.ProcessName + "(" + oSettings.procParent.Id.ToString() + ")");
+                Trace.WriteLine(sStartupInfo);
+                Console.Error.WriteLine($"****\n**** {sStartupInfo}\n****");
+            }
+
             // Configure default options.
             clbOptions.SetItemChecked(2, true); // Propagate closures
             clbOptions.SetItemChecked(3, true); // Record bodies
@@ -523,7 +531,7 @@ namespace nmf_view
             if (sCurrentExe.Contains(".immortal.")) clbOptions.SetItemChecked(5, true);
 
             string sExtraInfo = $" [{Path.GetFileName(Application.ExecutablePath)}:{Process.GetCurrentProcess().Id}{(Utilities.IsUserAnAdmin() ? " Elevated" : String.Empty)}]";
-            log($"I am{sExtraInfo}");
+            log($"I am{sExtraInfo}, launched by [{((null != oSettings.procParent) ? (oSettings.procParent.ProcessName + ':' + oSettings.procParent.Id) : "unknown")}].");
             lblVersion.Text = $"v{Application.ProductVersion} [{((8 == IntPtr.Size) ? "64" : "32")}-bit]";
             Text += sExtraInfo;  // Append extra info to form caption.
 
@@ -559,7 +567,6 @@ namespace nmf_view
                     log($"parent-window: {oSettings.iParentWindow:x8} {((oSettings.iParentWindow==0)?"(Background Script)":String.Empty)}");
                 }
             }
-
             oSettings.sExtensionID = oSettings.sExtensionID.Replace("chrome-extension://", String.Empty).TrimEnd('/');
             toolTip1.SetToolTip(pbExt, $"Connected to {oSettings.sExtensionID}.\nDouble-click to disconnect.");
             toolTip1.SetToolTip(pbApp, $"Click to set the ClientHandler to another instance of this app.");
@@ -754,7 +761,6 @@ namespace nmf_view
         {
             Process.Start("https://github.com/ericlaw1979/NativeMessagingDebugger");
         }
-
         private void lnkDocs_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
             Process.Start("https://github.com/ericlaw1979/NativeMessagingDebugger/blob/main/DOCS.md");
