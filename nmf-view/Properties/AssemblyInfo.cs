@@ -10,7 +10,16 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 [assembly: ComVisible(false)]
-[assembly: AssemblyVersion("1.0.7.0")]
+[assembly: AssemblyVersion("1.1.0.1")]
+
+// v1.1.0.1
+// Allow 0-byte messages
+
+// v1.1 (underway)
+// Add support for watching std_err
+
+// v1.0.8
+// More info about filetype of handles
 
 // v1.0.7
 // Display the invoking process' name and PID

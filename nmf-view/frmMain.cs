@@ -30,20 +30,36 @@ namespace nmf_view
             FileTypePipe = 0x0003,
             FileTypeRemote = 0x8000,
             FileTypeUnknown = 0x0000,
+            FileTypeUnknownError = 0xFFFE,
+            FileTypeUnknownHandleInvalid = 0xFFFF,
         }
         const int STD_INPUT_HANDLE = -10;
         const int STD_OUTPUT_HANDLE = -11;
         const int STD_ERROR_HANDLE = -12;
 
-//        [DllImport("kernel32.dll", SetLastError = true, ExactSpelling = true)]
-//        static extern bool FreeConsole();
+        [DllImport("kernel32.dll", SetLastError = true)]
+        static extern FileType GetFileType(IntPtr hFile);
+        FileType GetFileType2(IntPtr hFile)
+        {
+            FileType ftResult = GetFileType(hFile);
+            
+            if (ftResult != FileType.FileTypeUnknown) return ftResult;
+            int iError = Marshal.GetLastWin32Error();
+            if (0 == iError /* S_OK */) return FileType.FileTypeUnknown;
+            if (6 == iError  /* ERROR_INVALID_HANDLE */)
+            {
+                return FileType.FileTypeUnknownHandleInvalid;
+            }
+            return FileType.FileTypeUnknownError;
+        }
+
+        // [DllImport("kernel32.dll", SetLastError = true, ExactSpelling = true)]
+        // static extern bool FreeConsole();
 
         private const int SW_SHOW = 5;
         [DllImport("User32")]
         private static extern int ShowWindow(int hwnd, int nCmdShow);
 
-        [DllImport("kernel32.dll")]
-        static extern FileType GetFileType(IntPtr hFile);
         [DllImport("Kernel32.dll", SetLastError = true)]
         static extern IntPtr GetStdHandle(int nStdHandle);
 
@@ -79,6 +95,8 @@ namespace nmf_view
             public Stream strmToApp;
             public Stream strmFromExt;
             public Stream strmToExt;
+            //public Stream strmErrToExt;
+            public Stream strmErrFromApp;
             public Process procParent;
         }
 
@@ -91,6 +109,7 @@ namespace nmf_view
         {
             try
             {
+                if (null == oSettings.strmToApp) return;
                 byte[] arrPayload = Encoding.UTF8.GetBytes(sMessage);
                 byte[] arrSize = BitConverter.GetBytes((UInt32)arrPayload.Length);
                 await oSettings.strmToApp.WriteAsync(arrSize, 0, 4);
@@ -257,6 +276,7 @@ namespace nmf_view
             log("Detaching NativeHost App pipes.");
             if (null != oSettings.strmToApp) { oSettings.strmToApp.Close(); oSettings.strmToApp = null; }
             if (null != oSettings.strmFromApp) { oSettings.strmFromApp.Close(); oSettings.strmFromApp = null; }
+            if (null != oSettings.strmErrFromApp) { oSettings.strmErrFromApp.Close(); oSettings.strmErrFromApp = null; }
             log("NativeHost App pipes detached.");
             markAppDetached();
             if (oSettings.bPropagateClosures) detachExtension();
@@ -296,7 +316,7 @@ namespace nmf_view
 
                 if (cbBodyPromised >= Int32.MaxValue)
                 {
-                    log("Was promised a message >=2gb. Technically this is legal but this app only allows 2GB due to .NET Framework size limits.");
+                    log("Was promised a message >=2gb. Technically this is legal, but this debugger only allows 2GB due to .NET Framework size limits.");
                     detachExtension();
                     return;
                 }
@@ -321,6 +341,7 @@ namespace nmf_view
 
                 if (oSettings.bSendToFiddler)
                 {
+                    log("Forwarding message to Fiddler...");
                     try
                     {
                         HttpContent entity = new ByteArrayContent(buffer);
@@ -350,16 +371,39 @@ namespace nmf_view
                     log($"!!! ERROR: JSON Parsing failed at offset {oErrors.iErrorIndex} {oErrors.sWarningText}. Note:Strings must be double-quoted.");
                 }
 
-                if (oSettings.bReflectToExtension &&
-                    (sMessage.Length < (1024 * 1024)))    // Don't reflect messages over 1mb. They're illegal!
+                if (oSettings.bReflectToExtension)
                 {
-                    await WriteToExtension(sMessage);
+                    // Don't reflect messages over 1mb. They're illegal!)
+                    if (sMessage.Length < (1024 * 1024))
+                    {
+                        log("Reflecting message to extension...");
+                        await WriteToExtension(sMessage);
+                    }
+                    else log("!! Message was over 1mb and must not be reflected !!");
                 }
 
-                if (null != oSettings.strmToApp)
+                await WriteToApp(sMessage);
+            }
+        }
+
+        /// <summary>
+        /// This function sits around waiting for messages from the browser extension.
+        /// </summary>
+        private async Task WatchStdErrFromApp()
+        {
+            //if (null == oSettings.strmErrFromApp) return;
+            byte[] arrErrString = new byte[1024];
+
+            while (true)
+            {
+                int cbThisRead = await oSettings.strmErrFromApp.ReadAsync(arrErrString, 0, arrErrString.Length, ctsApp.Token);
+                if (cbThisRead < 1)
                 {
-                    await WriteToApp(sMessage);
+                   return;
                 }
+                //MaybeWriteBytesToLogfile("-RawRead: ", arrLenBytes, cbSizeRead, cbThisRead);
+                string sMessage = Encoding.UTF8.GetString(arrErrString, 0, (int)cbThisRead);
+                log("App wrote Std_Err: " + sMessage, false);
             }
         }
 
@@ -534,6 +578,8 @@ namespace nmf_view
             log($"I am{sExtraInfo}, launched by [{((null != oSettings.procParent) ? (oSettings.procParent.ProcessName + ':' + oSettings.procParent.Id) : "unknown")}].");
             lblVersion.Text = $"v{Application.ProductVersion} [{((8 == IntPtr.Size) ? "64" : "32")}-bit]";
             Text += sExtraInfo;  // Append extra info to form caption.
+            log(Utilities.DescribeStartupHandles());
+            log(DescribeStandardHandles());
 
             var arrArgs = Environment.GetCommandLineArgs();
             if (arrArgs.Length > 1) oSettings.sExtensionID = arrArgs[1];
@@ -584,17 +630,9 @@ namespace nmf_view
         {
             try
             {
-                var hIn = GetStdHandle(STD_INPUT_HANDLE);
-                var hInType = GetFileType(hIn);
-                var hOut = GetStdHandle(STD_OUTPUT_HANDLE);
-                var hOutType = GetFileType(hOut);
-                var hErr = GetStdHandle(STD_ERROR_HANDLE);
-                var hErrType = GetFileType(hErr);
+                log(DescribeStandardHandles());
                 oSettings.strmFromExt = Console.OpenStandardInput();
                 oSettings.strmToExt = Console.OpenStandardOutput();
-                log($"Attached stdin (0x{hIn.ToInt64():x}, {hInType}) and " +
-                    $"stdout (0x{hOut.ToInt64():x}, {hOutType}) streams.");
-                log($"Not using stderr (0x{hErr.ToInt64():x}, {hErrType}).");
                 pbExt.BackColor = Color.FromArgb(159, 255, 159);
                 Task.Run(async () => await MessageShufflerForExtension());
             }
@@ -602,6 +640,19 @@ namespace nmf_view
             {
                 log(eX.Message);
             }
+        }
+
+        private string DescribeStandardHandles()
+        {
+            var hIn = GetStdHandle(STD_INPUT_HANDLE);
+            var hInType = GetFileType2(hIn);
+            var hOut = GetStdHandle(STD_OUTPUT_HANDLE);
+            var hOutType = GetFileType2(hOut);
+            var hErr = GetStdHandle(STD_ERROR_HANDLE);
+            var hErrType = GetFileType2(hErr);
+            return ($"GetStdHandle() says stdin=(0x{hIn.ToInt64():x}, {hInType}); " +
+                $"stdout=(0x{hOut.ToInt64():x}, {hOutType}); " +
+                $"stderr=(0x{hErr.ToInt64():x}, {hErrType}).");
         }
 
         private void clbOptions_ItemCheck(object sender, ItemCheckEventArgs e)
@@ -714,14 +765,15 @@ namespace nmf_view
                 myProcess.StartInfo.UseShellExecute = false;
                 myProcess.StartInfo.WorkingDirectory = Path.GetDirectoryName(myProcess.StartInfo.FileName);
 
-                // Hide by default
-                // TODO: allow showing https://source.chromium.org/chromium/chromium/src/+/main:base/process/launch_win.cc;l=298;drc=1ad438dde6b39e1c0d04b8f8cb27c1a14ba6f90e
+                // TODO: If the compat hack lands for Chrome, then we should use the same logic here to show GUI if the app targets SUBSYSTEM_WINDOWS
+                // https://weblogs.asp.net/whaggard/223020
+                // https://source.chromium.org/chromium/chromium/src/+/main:base/process/launch_win.cc;l=298;drc=1ad438dde6b39e1c0d04b8f8cb27c1a14ba6f90e
                 myProcess.StartInfo.CreateNoWindow = true;
                 myProcess.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;  // Does this do anything?
 
                 myProcess.StartInfo.RedirectStandardInput = true;
                 myProcess.StartInfo.RedirectStandardOutput = true;
-                // TODO: STDERR?
+                myProcess.StartInfo.RedirectStandardError = true;
 
                 try
                 {
@@ -741,8 +793,10 @@ namespace nmf_view
                 // https://docs.microsoft.com/en-us/dotnet/api/system.console?view=net-5.0#Streams
                 oSettings.strmToApp = myProcess.StandardInput.BaseStream;
                 oSettings.strmFromApp = myProcess.StandardOutput.BaseStream;
+                oSettings.strmErrFromApp = myProcess.StandardError.BaseStream;
                 log($"Started {oSettings.sExeName} as the proxied NativeMessagingHost.");
                 Task.Run(async () => await MessageShufflerForApp());
+                Task.Run(async () => await WatchStdErrFromApp());
                 return true;
             }
         }
@@ -952,12 +1006,12 @@ namespace nmf_view
 
         private void txtSendToApp_TextChanged(object sender, EventArgs e)
         {
-            btnSendToApp.Enabled = ((txtSendToApp.TextLength > 0) && IsAppAttached());
+            btnSendToApp.Enabled = (/*(txtSendToApp.TextLength > 0) && */ IsAppAttached());
         }
 
         private void txtSendToExtension_TextChanged(object sender, EventArgs e)
         {
-            btnSendToExtension.Enabled = ((txtSendToExtension.TextLength > 0) && IsExtensionAttached());
+            btnSendToExtension.Enabled = (/*(txtSendToExtension.TextLength > 0) && */ IsExtensionAttached());
         }
 
         private async void btnSendToApp_Click(object sender, EventArgs e)
@@ -1000,6 +1054,11 @@ namespace nmf_view
                     return;
                 }
             }
+        }
+
+        private void btnPokeStdErr_Click(object sender, EventArgs e)
+        {
+            Console.Error.WriteLine("Poking StdErr @" + DateTime.Now.ToString());
         }
     }
 }

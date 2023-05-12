@@ -14,6 +14,39 @@ namespace nmf_view
         [return: MarshalAs(UnmanagedType.Bool)]
         public static extern bool IsUserAnAdmin();
 
+        [StructLayout(LayoutKind.Sequential)]
+        public struct STARTUPINFO
+        {
+            public uint cb;
+            public string lpReserved;
+            public string lpDesktop;
+            public string lpTitle;
+            public Int32 dwX;
+            public Int32 dwY;
+            public Int32 dwXSize;
+            public Int32 dwYSize;
+            public Int32 dwXCountChars;
+            public Int32 dwYCountChars;
+            public Int32 dwFillAttribute;
+            public Int32 dwFlags;
+            public Int16 wShowWindow;
+            public Int16 cbReserved2;
+            public IntPtr lpReserved2;
+            public IntPtr hStdInput;
+            public IntPtr hStdOutput;
+            public IntPtr hStdError;
+        }
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        private static extern void GetStartupInfo(out STARTUPINFO lpStartupInfo);
+
+        public static string DescribeStartupHandles()
+        {
+            STARTUPINFO si;
+            GetStartupInfo(out si);  // dwFlags == 0x400 is STARTF_HASSHELLDATA, meaning stdout is actually a monitor handle, see GetMonitorInfoA.
+            return $"GetStartupInfo() says dwFlags=0x{si.dwFlags:x}, {((si.dwFlags & 0x100)==0x100 ? "in" : "ex")}cludes STARTF_USESTDHANDLES; stdin=0x{si.hStdInput.ToInt64():x}; stdout=0x{si.hStdOutput.ToInt64():x}; stderr=0x{si.hStdError.ToInt64():x}.";
+        }
+
         public static bool DenyProcessTermination()
         {
             try

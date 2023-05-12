@@ -56,6 +56,7 @@ namespace nmf_view
             this.scInjector = new System.Windows.Forms.SplitContainer();
             this.btnSendToApp = new System.Windows.Forms.Button();
             this.txtSendToApp = new System.Windows.Forms.TextBox();
+            this.btnPokeStdErr = new System.Windows.Forms.Button();
             this.txtSendToExtension = new System.Windows.Forms.TextBox();
             this.btnSendToExtension = new System.Windows.Forms.Button();
             this.pageTroubleshooter = new System.Windows.Forms.TabPage();
@@ -297,7 +298,7 @@ namespace nmf_view
             this.label2.AutoSize = true;
             this.label2.Location = new System.Drawing.Point(5, 32);
             this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(1218, 32);
+            this.label2.Size = new System.Drawing.Size(1217, 32);
             this.label2.TabIndex = 0;
             this.label2.Text = "NOT YET IMPLEMENTED (Eventually, select which NativeMessagingHosts this applicati" +
     "on should intercept/proxy.)";
@@ -327,6 +328,7 @@ namespace nmf_view
             // 
             // scInjector.Panel2
             // 
+            this.scInjector.Panel2.Controls.Add(this.btnPokeStdErr);
             this.scInjector.Panel2.Controls.Add(this.txtSendToExtension);
             this.scInjector.Panel2.Controls.Add(this.btnSendToExtension);
             this.scInjector.Size = new System.Drawing.Size(1463, 812);
@@ -358,6 +360,17 @@ namespace nmf_view
             this.txtSendToApp.TabIndex = 5;
             this.txtSendToApp.Text = "{\"example_1\": \"to nmh.exe\", \"field_2\": 2, \"field_3\":false}";
             this.txtSendToApp.TextChanged += new System.EventHandler(this.txtSendToApp_TextChanged);
+            // 
+            // btnPokeStdErr
+            // 
+            this.btnPokeStdErr.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.btnPokeStdErr.Location = new System.Drawing.Point(8, 345);
+            this.btnPokeStdErr.Name = "btnPokeStdErr";
+            this.btnPokeStdErr.Size = new System.Drawing.Size(324, 41);
+            this.btnPokeStdErr.TabIndex = 5;
+            this.btnPokeStdErr.Text = "Poke StdErr";
+            this.btnPokeStdErr.UseVisualStyleBackColor = true;
+            this.btnPokeStdErr.Click += new System.EventHandler(this.btnPokeStdErr_Click);
             // 
             // txtSendToExtension
             // 
@@ -473,7 +486,7 @@ namespace nmf_view
             this.lblVersion.AutoSize = true;
             this.lblVersion.Location = new System.Drawing.Point(39, 113);
             this.lblVersion.Name = "lblVersion";
-            this.lblVersion.Size = new System.Drawing.Size(94, 32);
+            this.lblVersion.Size = new System.Drawing.Size(93, 32);
             this.lblVersion.TabIndex = 2;
             this.lblVersion.Text = "v0.0.0.0";
             // 
@@ -577,5 +590,6 @@ namespace nmf_view
         private System.Windows.Forms.TextBox txtSendToApp;
         private System.Windows.Forms.TabPage pageTroubleshooter;
         private System.Windows.Forms.RichTextBox rtbTroubleshoot;
+        private System.Windows.Forms.Button btnPokeStdErr;
     }
 }
