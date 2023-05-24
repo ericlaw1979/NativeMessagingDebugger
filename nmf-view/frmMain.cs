@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
+using System.Drawing.Text;
 using System.IO;
 using System.Net.Http;
 using System.Reflection;
@@ -982,10 +983,24 @@ namespace nmf_view
 
         private void lvHosts_MouseDoubleClick(object sender, MouseEventArgs e)
         {
-            if ((Control.ModifierKeys == Keys.Alt) && (lvHosts.SelectedItems.Count == 1))
+            if (lvHosts.SelectedItems.Count == 1)
             {
-                ShowSelectedManifestInExplorer();
+                if (Control.ModifierKeys == Keys.Alt)
+                {
+                    ShowSelectedManifestInExplorer();
+                }
+                else if (Control.ModifierKeys == Keys.Shift)
+                {
+                    ShowSelectedEntryInRegEdit();
+                }
             }
+        }
+
+        private void ShowSelectedEntryInRegEdit()
+        {
+            ListViewItem oLVI = lvHosts.SelectedItems[0];
+            RegisteredHosts.HostEntry oHE = (RegisteredHosts.HostEntry)oLVI.Tag;
+            Utilities.OpenRegeditTo(oHE.RegistryKeyPath);
         }
 
         private void ShowSelectedManifestInExplorer()
@@ -993,7 +1008,6 @@ namespace nmf_view
             ListViewItem oLVI = lvHosts.SelectedItems[0];
             RegisteredHosts.HostEntry oHE = (RegisteredHosts.HostEntry)oLVI.Tag;
             Utilities.OpenExplorerTo(oHE.ManifestFilename);
-            // Utilities.OpenRegeditTo(oHE.RegistryKeyPath);
         }
 
         private void frmMain_FormClosed(object sender, FormClosedEventArgs e)

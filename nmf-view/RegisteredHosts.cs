@@ -52,7 +52,8 @@ namespace nmf_view
                 @"SOFTWARE\WOW6432Node\Google\Chrome\NativeMessagingHosts\",
                 @"SOFTWARE\Microsoft\Edge\NativeMessagingHosts\",
                 @"SOFTWARE\Chromium\NativeMessagingHosts\",
-                @"SOFTWARE\Google\Chrome\NativeMessagingHosts\"};
+                @"SOFTWARE\Google\Chrome\NativeMessagingHosts\",
+                @"SOFTWARE\Microsoft\AppModel\Lookaside\machine\Software\Google\Chrome\NativeMessagingHosts\"};
 
         // https://docs.microsoft.com/en-us/microsoft-edge/extensions-chromium/developer-guide/native-messaging?tabs=windows
 

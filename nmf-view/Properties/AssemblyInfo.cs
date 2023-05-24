@@ -10,7 +10,11 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 [assembly: ComVisible(false)]
-[assembly: AssemblyVersion("1.1.0.1")]
+[assembly: AssemblyVersion("1.1.0.2")]
+
+// v1.1.0.2
+// Enumerate "Lookaside" registry written by Windows Store App manifests
+// Add JumpTo Registry Entry
 
 // v1.1.0.1
 // Allow 0-byte messages
