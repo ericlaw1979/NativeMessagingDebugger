@@ -62,6 +62,18 @@ chrome.webNavigation.onBeforeNavigate.addListener(function (data) {
   nmhSend(oEvent);
 });
 
+chrome.webNavigation.onCommitted.addListener(function (data) {
+  const oEvent = {
+    'event': 'commit',
+    'url': data.url,
+    'tabId': data.tabId,
+    'frameId': data.frameId,
+    'parentFrameId': data.parentFrameId,
+    'timeStamp': data.timeStamp
+  };
+  nmhSend(oEvent);
+});
+
 // https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/webRequest/onBeforeRequest
 chrome.webRequest.onBeforeRequest.addListener(
   function(data) {
