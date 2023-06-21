@@ -10,7 +10,10 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 [assembly: ComVisible(false)]
-[assembly: AssemblyVersion("1.1.0.2")]
+[assembly: AssemblyVersion("1.1.0.3")]
+
+// v1.1.0.3
+// Add "Environment" tab
 
 // v1.1.0.2
 // Enumerate "Lookaside" registry written by Windows Store App manifests

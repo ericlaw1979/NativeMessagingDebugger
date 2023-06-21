@@ -1,6 +1,7 @@
 ﻿using Microsoft.Win32;
 using Microsoft.Win32.SafeHandles;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
@@ -619,12 +620,30 @@ namespace nmf_view
             toolTip1.SetToolTip(pbApp, $"Click to set the ClientHandler to another instance of this app.");
             log("Listening for messages...");
 
+            PopulateEnvironment();
+
             // Ensure that our window is showing.
             if (!sCurrentExe.Contains(".noshow.")) ShowWindow((int)this.Handle, SW_SHOW);
 
             /* if (oSettings.sExtensionID != "unknown") */
             ConnectMostLikelyApp();
             WaitForMessages();
+        }
+
+        private void PopulateEnvironment()
+        {
+            try
+            {
+                List<string> slEnv = new List<string>();
+                foreach (DictionaryEntry de in Environment.GetEnvironmentVariables())
+                    slEnv.Add($"{de.Key} = {de.Value}");
+                slEnv.Sort();
+                rtbEnvironment.Text = String.Join("\r\n", slEnv);
+            }
+            catch (Exception eX)
+            {
+                rtbEnvironment.Text = eX.Message;
+            }
         }
 
         private void WaitForMessages()
