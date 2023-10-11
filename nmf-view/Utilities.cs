@@ -67,6 +67,15 @@ namespace nmf_view
             }
             return true;
         }
+        [DllImport("user32.dll", EntryPoint = "SendMessage")]
+        private static extern IntPtr SendCueTextMessage(IntPtr hWnd, int msg, IntPtr wParam, [MarshalAs(UnmanagedType.LPWStr)] string lParam);
+
+        public static void SetCueText(Control oCtl, string sText)
+        {
+            IntPtr hWnd = oCtl.Handle;
+            SendCueTextMessage(hWnd, 5377, IntPtr.Zero, sText);
+        }
+
         internal static void CopyToClipboard(string s)
         {
             DataObject data = new DataObject();

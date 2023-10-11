@@ -308,7 +308,7 @@ namespace nmf_view
                 }
 
                 UInt32 cbBodyPromised = BitConverter.ToUInt32(arrLenBytes, 0);
-                log($"Extension promised a message of length: {cbBodyPromised:N0}");
+                // log($"Extension promised a message of length: {cbBodyPromised:N0}");
                 if (cbBodyPromised == 0)
                 {
                     log("Got an empty (size==0) message. Is that legal?? Disconnecting.");
@@ -331,7 +331,7 @@ namespace nmf_view
                     int cbThisRead = await oSettings.strmFromExt.ReadAsync(buffer, (int)cbBodyRead, (int)(cbBodyPromised - cbBodyRead), ctsExt.Token);
                     if (cbThisRead < 1)
                     {
-                        log($"Got EOF while reading message data from (Extension); got only {cbBodyRead} bytes. Disconnecting.");
+                        log($"Got EOF while reading message data from (Extension); got only {cbBodyRead} of {cbBodyPromised} bytes. Disconnecting.");
                         detachExtension();
                         return;
                     }
@@ -628,6 +628,7 @@ namespace nmf_view
             /* if (oSettings.sExtensionID != "unknown") */
             ConnectMostLikelyApp();
             WaitForMessages();
+            Utilities.SetCueText(txtSearch, "Search...");
         }
 
         private void PopulateEnvironment()
@@ -1087,11 +1088,42 @@ namespace nmf_view
                     return;
                 }
             }
+
+            if ((tcApp.SelectedIndex == 0) && (e.KeyCode == Keys.F && (e.Control || e.Alt)))
+            {
+                e.SuppressKeyPress = e.Handled = true;
+                txtSearch.Focus();
+            }
         }
 
         private void btnPokeStdErr_Click(object sender, EventArgs e)
         {
             Console.Error.WriteLine("Poking StdErr @" + DateTime.Now.ToString());
+        }
+
+        private void txtSearch_KeyDown(object sender, KeyEventArgs e)
+        {
+            if ((e.KeyCode == Keys.Escape) || (e.KeyCode== Keys.Back && txtSearch.Text.Length <2))
+            {
+                e.Handled = e.SuppressKeyPress = true;
+                txtSearch.Clear();
+                txtLog.SelectionLength = 0;
+                txtLog.SelectionStart = txtLog.TextLength;
+                return;
+            }
+            if (e.KeyCode == Keys.Enter)
+            {
+                if (txtSearch.Text.Length > 0)
+                {
+                    int iStartAt = txtLog.SelectionStart + 1;
+                    if (iStartAt >= txtLog.TextLength) iStartAt = 0;
+                    if (txtLog.Find(txtSearch.Text, iStartAt, RichTextBoxFinds.None) > -1)
+                    {
+                        e.Handled = e.SuppressKeyPress = true;
+                    }
+                }
+                return;
+            }
         }
     }
 }

@@ -10,7 +10,11 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 [assembly: ComVisible(false)]
-[assembly: AssemblyVersion("1.1.0.3")]
+[assembly: AssemblyVersion("1.1.1.0")]
+
+// v1.1.0.4
+// Add Search feature
+// Remove cbBodyPromised spew from log.
 
 // v1.1.0.3
 // Add "Environment" tab
