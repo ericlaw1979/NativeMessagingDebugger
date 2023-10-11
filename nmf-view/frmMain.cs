@@ -1103,14 +1103,20 @@ namespace nmf_view
 
         private void txtSearch_KeyDown(object sender, KeyEventArgs e)
         {
-            if ((e.KeyCode == Keys.Escape) || (e.KeyCode== Keys.Back && txtSearch.Text.Length <2))
+            if ((e.KeyCode == Keys.Escape) || (e.KeyCode == Keys.Back && txtSearch.Text.Length <2))
             {
                 e.Handled = e.SuppressKeyPress = true;
                 txtSearch.Clear();
-                txtLog.SelectionLength = 0;
-                txtLog.SelectionStart = txtLog.TextLength;
+                txtLog.Select(txtLog.TextLength, 0);
                 return;
             }
+            if (e.KeyCode == Keys.X && e.Control)
+            {
+                e.Handled = e.SuppressKeyPress = true;
+                txtLog.Clear();
+                return;
+            }
+
             if (e.KeyCode == Keys.Enter)
             {
                 if (txtSearch.Text.Length > 0)
@@ -1123,6 +1129,21 @@ namespace nmf_view
                     }
                 }
                 return;
+            }
+        }
+
+        private void txtSearch_TextChanged(object sender, EventArgs e)
+        {
+            if (txtSearch.Text.Length > 0)
+            {  // Start at 0 if using TAB key for GoNext
+                txtSearch.BackColor = (txtLog.Find(txtSearch.Text, 0, RichTextBoxFinds.None) > -1) ?
+                    Color.LightGreen :
+                    Color.OrangeRed;
+            }
+            else
+            {
+                txtSearch.BackColor = Color.FromKnownColor(KnownColor.Window);
+                txtLog.Select(txtLog.TextLength, 0);
             }
         }
     }
