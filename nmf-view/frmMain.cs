@@ -770,7 +770,7 @@ namespace nmf_view
                 }
             }
             */
-            log ($"Did not find any likely nativeHost for {oSettings.sExtensionID}. If you are using this tool as a mock,\r\nthe Injector tab allows sending messages to the browser.");
+            log ($"Did not find any likely nativeHost for {oSettings.sExtensionID}. If you are using NMMeddler as a mock,\r\nthe Injector tab allows sending messages to the browser.");
             clbOptions.SetItemChecked(2, false); Debug.Assert(oSettings.bPropagateClosures == false);
             return false;
         }
