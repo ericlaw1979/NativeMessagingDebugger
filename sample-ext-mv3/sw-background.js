@@ -52,7 +52,7 @@ function init(sReason)
 
 chrome.webNavigation.onBeforeNavigate.addListener(function (data) {
   const oEvent = {
-    'event': 'navigation',
+    'event': 'onBeforeNavigate',
     'destination': data.url,
     'tabId': data.tabId,
     'frameId': data.frameId,
@@ -64,9 +64,22 @@ chrome.webNavigation.onBeforeNavigate.addListener(function (data) {
 
 chrome.webNavigation.onCommitted.addListener(function (data) {
   const oEvent = {
-    'event': 'commit',
+    'event': 'onCommitted',
     'url': data.url,
     'tabId': data.tabId,
+    'frameId': data.frameId,
+    'parentFrameId': data.parentFrameId,
+    'timeStamp': data.timeStamp
+  };
+  nmhSend(oEvent);
+});
+
+chrome.webNavigation.onHistoryStateUpdated.addListener(function (data) {
+  const oEvent = {
+    'event': 'onHistoryStateUpdated',
+    'url': data.url,
+    'tabId': data.tabId,
+    'processId': data.processId,
     'frameId': data.frameId,
     'parentFrameId': data.parentFrameId,
     'timeStamp': data.timeStamp
